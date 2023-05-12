@@ -20,10 +20,12 @@ GUI application for [yt-dlp](https://github.com/yt-dlp/yt-dlp) that allows you t
 
 ## Images
 
+### Dark Theme
 ![Main page - dark theme](https://github.com/ky-ler/YTDownloaderUI/raw/main/media/home_dark.png)
 
 ![Settings page - dark theme](https://github.com/ky-ler/YTDownloaderUI/raw/main/media/settings_dark.png)
 
+### Light Theme
 ![Main page - light theme](https://github.com/ky-ler/YTDownloaderUI/raw/main/media/home_light.png)
 
 ![Settings page - light theme](https://github.com/ky-ler/YTDownloaderUI/raw/main/media/settings_light.png)
