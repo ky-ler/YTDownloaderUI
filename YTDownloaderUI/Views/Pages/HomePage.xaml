@@ -1,0 +1,93 @@
+﻿<Page
+    x:Class="YTDownloaderUI.Views.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:YTDownloaderUI.Views.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="HomePage"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    mc:Ignorable="d"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}"
+    >
+
+    <ui:DynamicScrollViewer>
+        <StackPanel Name="Home_Panel" Margin="42">
+            <TextBlock
+                Margin="0"
+                FontSize="20"
+                FontWeight="Medium"
+                Text="Video Links" 
+            />
+            
+            <ui:TextBox
+                x:Name="UrlList"
+                Margin="0,12,0,0"
+                AcceptsReturn="True"
+                MinLines="4"
+                MaxLines="10"
+            />
+            
+            <ui:Button
+                x:Name="AddToQueue_Button"
+                Margin="0,12,0,0"
+                Content="Add to Queue"
+                HorizontalAlignment="Right"
+                Click="AddToQueue_Button_Click"
+            />
+            
+            <TextBlock
+                Margin="0,24,0,0"
+                FontSize="20"
+                FontWeight="Medium"
+                Text="Queue" 
+            />
+
+            <ItemsControl x:Name="QueueList" ItemsSource="{Binding UrlsQueue}" Margin="0,12,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="250" />
+                                <ColumnDefinition Width="80" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="{Binding Url}" Grid.Column="0"/>
+
+                            <!--<TextBlock Text="{Binding Status}" Grid.Column="1" HorizontalAlignment="Right"/>-->
+
+                            <!--<TextBlock x:Name="DlProgress" 
+                                    Text="{Binding DownloadProgress, StringFormat=p1}" 
+                                    Grid.Column="2" 
+                                    HorizontalAlignment="Right"
+                            />-->
+
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <ui:Button
+                x:Name="StartDownload_Button"
+                Margin="0,12,0,0"
+                Content="Download"
+                HorizontalAlignment="Right"
+                Click="StartDownload_Button_Click"
+            />
+
+            <TextBlock
+                x:Name="DownloadBtnStatus"
+                Margin="0,12,0,0"
+                Text=""
+                HorizontalAlignment="Right"
+            />
+
+        </StackPanel>
+    </ui:DynamicScrollViewer>
+</Page>
