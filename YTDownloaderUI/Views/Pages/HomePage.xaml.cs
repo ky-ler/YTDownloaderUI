@@ -36,26 +36,36 @@ public partial class HomePage
         if (string.IsNullOrEmpty(Settings.Default.YtDlpLocation))
         {
             StartDownload_Button.IsEnabled = false;
-            DownloadBtnStatus.Text = "Set your yt-dlp.exe location in settings!";
+            StatusText.Text = "Set your yt-dlp.exe location in settings!";
         }
         else
         {
             StartDownload_Button.IsEnabled = true;
-            DownloadBtnStatus.Text = "";
+            StatusText.Text = "";
         }
     }
 
     private void AddToQueue_Button_Click(object sender, System.Windows.RoutedEventArgs e)
     {
         var urls = UrlList.Text.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries)
-                                .Where(x => !string.IsNullOrWhiteSpace(x))
+                                .Where(x => x.Contains("youtu.be/") || x.Contains("youtube.com/watch?v="))
                                 .Select(x => x.Trim())
                                 .ToList();
 
         foreach (var url in urls)
         {
-            if (!UrlsQueue.Any(x => x.Url == url))
-                UrlsQueue.Add(new VideoInfo { Url = url, Status = "Queued", DownloadProgress = 0.0f });
+            var videoId = UrlParser.GetVideoId(url);
+
+            if (!UrlsQueue.Any(x => x.Url.Contains(videoId)))
+            {
+                UrlsQueue.Add(new VideoInfo(
+                    url: $"https://youtu.be/{videoId}",
+                    status: "Queued",
+                    downloadProgress: 0.0,
+                    audioOnly: false,
+                    getPlaylist: false,
+                    getSubtitles: false));
+            }
         }
 
         DataContext = this;
@@ -64,10 +74,10 @@ public partial class HomePage
 
     private async void StartDownload_Button_Click(object sender, System.Windows.RoutedEventArgs e)
     {
-        DownloadBtnStatus.Text = "Downloading...";
         StartDownload_Button.IsEnabled = false;
+
         await DownloadUtil.ProcessQueue(UrlsQueue);
-        DownloadBtnStatus.Text = "Finished Downloading!";
+
         StartDownload_Button.IsEnabled = true;
     }
 }

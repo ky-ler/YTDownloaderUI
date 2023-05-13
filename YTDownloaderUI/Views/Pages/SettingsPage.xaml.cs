@@ -69,7 +69,45 @@ public partial class SettingsPage
         }
     }
 
-    private void YtDlpLocation_TextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    private void FFmpegLocation_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            FileName = "ffmpeg",
+            DefaultExt = ".exe",
+            Filter = "Executables (.exe)|*.exe",
+            InitialDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory)
+        };
+
+        bool? result = dialog.ShowDialog();
+
+        if (result == true)
+        {
+            Settings.Default.FFmpegLocation = dialog.FileName;
+            DataContext = dialog.FileName;
+        }
+    }
+
+    private void FFprobeLocation_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            FileName = "ffprobe",
+            DefaultExt = ".exe",
+            Filter = "Executables (.exe)|*.exe",
+            InitialDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory)
+        };
+
+        bool? result = dialog.ShowDialog();
+
+        if (result == true)
+        {
+            Settings.Default.FFprobeLocation = dialog.FileName;
+            DataContext = dialog.FileName;
+        }
+    }
+
+    private void TextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
         Settings.Default.Save();
     }

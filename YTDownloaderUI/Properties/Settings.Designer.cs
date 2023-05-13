@@ -70,5 +70,29 @@ namespace YTDownloaderUI.Properties {
                 this["WindowHeight"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string FFmpegLocation {
+            get {
+                return ((string)(this["FFmpegLocation"]));
+            }
+            set {
+                this["FFmpegLocation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string FFprobeLocation {
+            get {
+                return ((string)(this["FFprobeLocation"]));
+            }
+            set {
+                this["FFprobeLocation"] = value;
+            }
+        }
     }
 }

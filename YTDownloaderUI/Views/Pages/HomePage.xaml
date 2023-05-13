@@ -54,19 +54,19 @@
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="250" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="80" />
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="{Binding Url}" Grid.Column="0"/>
 
-                            <!--<TextBlock Text="{Binding Status}" Grid.Column="1" HorizontalAlignment="Right"/>-->
+                            <TextBlock Text="{Binding Status}" Grid.Column="1" HorizontalAlignment="Right"/>
 
-                            <!--<TextBlock x:Name="DlProgress" 
+                            <TextBlock x:Name="DlProgress" 
                                     Text="{Binding DownloadProgress, StringFormat=p1}" 
                                     Grid.Column="2" 
                                     HorizontalAlignment="Right"
-                            />-->
+                            />
 
                         </Grid>
                     </DataTemplate>
@@ -82,7 +82,7 @@
             />
 
             <TextBlock
-                x:Name="DownloadBtnStatus"
+                x:Name="StatusText"
                 Margin="0,12,0,0"
                 Text=""
                 HorizontalAlignment="Right"

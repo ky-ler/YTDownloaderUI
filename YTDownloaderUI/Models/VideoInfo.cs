@@ -1,10 +1,70 @@
-﻿namespace YTDownloaderUI.Models;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
-public class VideoInfo
+namespace YTDownloaderUI.Models;
+
+public class VideoInfo : INotifyPropertyChanged
 {
-    public string Url { get; set; } = string.Empty;
+    private string status = "Queued";
+    private double downloadProgress = 0.0;
 
-    public string Status { get; set; } = "Queued";
 
-    public float DownloadProgress { get; set; }
+    public VideoInfo(string url, string status, double downloadProgress, bool audioOnly, bool getPlaylist, bool getSubtitles)
+    {
+        Url = url;
+        Status = status;
+        DownloadProgress = downloadProgress;
+        AudioOnly = audioOnly;
+        GetPlaylist = getPlaylist;
+        GetSubtitles = getSubtitles;
+    }
+
+    public string Url { get; set; }
+
+    public bool AudioOnly { get; set; } = false;
+
+    public bool GetPlaylist { get; set; } = false;
+
+    public bool GetSubtitles { get; set; } = false;
+
+    public string Status
+    {
+        get => status;
+        set
+        {
+            string newValue = value;
+            string oldValue = status;
+
+            if (newValue != oldValue)
+            {
+                status = newValue;
+                OnPropertyChanged(nameof(Status));
+            }
+        }
+    }
+
+    public double DownloadProgress
+    {
+        get => downloadProgress;
+        set
+        {
+            double newValue = value;
+            double oldValue = downloadProgress;
+
+            if (newValue != oldValue)
+            {
+                downloadProgress = newValue;
+                OnPropertyChanged(nameof(DownloadProgress));
+            }
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string name = "")
+    {
+        if (PropertyChanged == null)
+            return;
+
+        PropertyChanged.Invoke(this, new PropertyChangedEventArgs(name));
+    }
 }

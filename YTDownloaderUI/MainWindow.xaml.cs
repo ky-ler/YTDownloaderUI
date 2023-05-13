@@ -1,4 +1,6 @@
-﻿using Wpf.Ui.Appearance;
+﻿using System;
+using System.IO;
+using Wpf.Ui.Appearance;
 using YTDownloaderUI.Properties;
 using YTDownloaderUI.Views.Pages;
 
@@ -9,9 +11,14 @@ namespace YTDownloaderUI;
 /// </summary>
 public partial class MainWindow
 {
+    readonly static string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+    readonly string downloadsFolder = appDirectory + "/downloads";
 
     public MainWindow()
     {
+        if (!Directory.Exists(downloadsFolder))
+            Directory.CreateDirectory(downloadsFolder);
+
         DataContext = this;
 
         Watcher.Watch(this);
