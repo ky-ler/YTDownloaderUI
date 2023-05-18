@@ -12,13 +12,19 @@ public static class UrlParser
         int findIndex = 0;
 
         var regularUrl = "youtube.com/watch?v=";
-        var shortUrl = "youtu.be/";
+        var miniLink = "youtu.be/";
+        var shorts = "shorts/";
 
-        if (cleanUrl.Contains(regularUrl))
+        if (cleanUrl.Contains(shorts))
+            findIndex = cleanUrl.IndexOf(shorts) + shorts.Length;
+
+        else if (cleanUrl.Contains(regularUrl))
             findIndex = cleanUrl.IndexOf(regularUrl) + regularUrl.Length;
 
-        else if (cleanUrl.Contains(shortUrl))
-            findIndex = cleanUrl.IndexOf(shortUrl) + shortUrl.Length;
+        else if (cleanUrl.Contains(miniLink))
+            findIndex = cleanUrl.IndexOf(miniLink) + miniLink.Length;
+
+
 
         videoId = cleanUrl[findIndex..];
 
@@ -27,6 +33,9 @@ public static class UrlParser
 
         if (endIndex >= 0)
             videoId = videoId[..endIndex];
+
+        if (cleanUrl.Contains(shorts))
+            return shorts + videoId;
 
         return videoId;
     }

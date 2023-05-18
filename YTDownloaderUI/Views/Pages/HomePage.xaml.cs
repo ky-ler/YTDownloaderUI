@@ -48,7 +48,7 @@ public partial class HomePage
     private void AddToQueue_Button_Click(object sender, System.Windows.RoutedEventArgs e)
     {
         var urls = UrlList.Text.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries)
-                                .Where(x => x.Contains("youtu.be/") || x.Contains("youtube.com/watch?v="))
+                                .Where(x => x.Contains("youtu.be/") || x.Contains("youtube.com/"))
                                 .Select(x => x.Trim())
                                 .ToList();
 
