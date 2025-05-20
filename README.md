@@ -4,12 +4,12 @@ GUI wrapper for [yt-dlp](https://github.com/yt-dlp/yt-dlp) that allows you to do
 
 ## Features
 
-- Batch download YouTube videos (multiple videos at once)
+- Batch download YouTube videos
 - Light/Dark Theme
 
 ## Dependencies
 
-- [.NET 7.0 SDK](https://dotnet.microsoft.com/en-us/download)
+- [.NET 7.0](https://dotnet.microsoft.com/en-us/download)
 
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp/releases/latest) (yt-dlp.exe for Windows)
 
