@@ -52,7 +52,7 @@
         </ui:NavigationView>
 
         <ui:TitleBar
-            Title="YTDownloaderGUI"
+            Title="YTDownloaderUI"
             Grid.Row="0">
         </ui:TitleBar>
     </Grid>

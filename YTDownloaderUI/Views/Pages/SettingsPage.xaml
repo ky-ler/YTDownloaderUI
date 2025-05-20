@@ -23,7 +23,7 @@
                 Margin="0"
                 FontSize="20"
                 FontWeight="Medium"
-                Text="About YTDownloaderGUI" 
+                Text="About YTDownloaderUI" 
             />
 
             <TextBlock x:Name="VersionInfo" Margin="0,12,0,0" FontSize="14" Text="" />
@@ -38,9 +38,9 @@
                 Margin="0,24,0,0"
                 Text="Personalization" 
             />
-            
+
             <TextBlock Margin="0,12,0,0" Text="Theme" />
-            
+
             <RadioButton
                 x:Name="LightThemeRadioButton"
                 Margin="0,12,0,0"
@@ -48,7 +48,7 @@
                 Content="Light"
                 GroupName="themeSelect" 
             />
-            
+
             <RadioButton
                 x:Name="DarkThemeRadioButton"
                 Margin="0,8,0,0"
@@ -65,19 +65,19 @@
             />
 
             <Label Margin="0,12,0,0">yt-dlp Location</Label>
-    
+
             <Grid Margin="0,12,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="250" />
                     <ColumnDefinition Width="12" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                
+
                 <ui:TextBox x:Name="YtDlpLocation_TextBox" 
                             Text="{Binding Source={StaticResource Settings}, Path=Default.YtDlpLocation}"
                             TextChanged="TextBox_TextChanged"
                 />
-                
+
                 <ui:Button
                     x:Name="YtDlpLocation_Button"
                     Content="Choose"
