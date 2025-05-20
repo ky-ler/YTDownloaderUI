@@ -1,6 +1,6 @@
 # YTDownloaderUI
 
-GUI wrapper for [yt-dlp](https://github.com/yt-dlp/yt-dlp) that allows you to download YouTube videos.
+Download YouTube videos. GUI wrapper for [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 
 ## Features
 
@@ -9,7 +9,7 @@ GUI wrapper for [yt-dlp](https://github.com/yt-dlp/yt-dlp) that allows you to do
 
 ## Dependencies
 
-- [.NET 7.0](https://dotnet.microsoft.com/en-us/download)
+- [.NET 8.0](https://dotnet.microsoft.com/en-us/download)
 
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp/releases/latest) (yt-dlp.exe for Windows)
 
