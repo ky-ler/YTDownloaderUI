@@ -1,6 +1,6 @@
 # YTDownloaderUI
 
-Download YouTube videos. GUI wrapper for [yt-dlp](https://github.com/yt-dlp/yt-dlp).
+Download YouTube videos.
 
 ## Features
 
