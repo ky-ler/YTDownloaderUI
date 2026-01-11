@@ -7,7 +7,7 @@ public class VideoInfo : INotifyPropertyChanged
 {
     private string status = "Queued";
     private double downloadProgress = 0.0;
-
+    private string? title;
 
     public VideoInfo(string url, string status, double downloadProgress, bool audioOnly, bool getPlaylist, bool getSubtitles, string preset = "")
     {
@@ -22,6 +22,25 @@ public class VideoInfo : INotifyPropertyChanged
 
     public string Url { get; set; }
 
+    public string? Title
+    {
+        get => title;
+        set
+        {
+            if (title != value)
+            {
+                title = value;
+                OnPropertyChanged(nameof(Title));
+                OnPropertyChanged(nameof(DisplayName));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns Title if available, otherwise falls back to Url
+    /// </summary>
+    public string DisplayName => !string.IsNullOrEmpty(Title) ? Title : Url;
+
     public bool AudioOnly { get; set; } = false;
 
     public bool GetPlaylist { get; set; } = false;
@@ -29,6 +48,11 @@ public class VideoInfo : INotifyPropertyChanged
     public bool GetSubtitles { get; set; } = false;
 
     public string Preset { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Returns a user-friendly preset display name
+    /// </summary>
+    public string PresetDisplay => string.IsNullOrEmpty(Preset) ? "(None)" : Preset.ToUpper();
 
     public string Status
     {
