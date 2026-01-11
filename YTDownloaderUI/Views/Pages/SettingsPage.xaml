@@ -73,9 +73,8 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <ui:TextBox x:Name="YtDlpLocation_TextBox" 
-                            Text="{Binding Source={StaticResource Settings}, Path=Default.YtDlpLocation}"
-                            TextChanged="TextBox_TextChanged"
+                <ui:TextBox x:Name="YtDlpLocation_TextBox"
+                            Text="{Binding Source={StaticResource Settings}, Path=Default.YtDlpLocation, Mode=OneWay}"
                 />
 
                 <ui:Button
@@ -86,49 +85,14 @@
                 />
             </Grid>
 
-            <Label Margin="0,12,0,0">FFmpeg Location</Label>
-
-            <Grid Margin="0,12,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <ui:TextBox x:Name="FFmpegLocation_TextBox" 
-                            Text="{Binding Source={StaticResource Settings}, Path=Default.FFmpegLocation}"
-                            TextChanged="TextBox_TextChanged"
-                />
-
-                <ui:Button
-                    x:Name="FFmpegLocation_Button"
-                    Content="Choose"
-                    Click="FFmpegLocation_Button_Click"
-                    Grid.Column="2"
-                />
-            </Grid>
-
-            <Label Margin="0,12,0,0">FFprobe Location</Label>
-
-            <Grid Margin="0,12,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <ui:TextBox x:Name="FFprobeLocation_TextBox" 
-                            Text="{Binding Source={StaticResource Settings}, Path=Default.FFprobeLocation}"
-                            TextChanged="TextBox_TextChanged"
-                />
-
-                <ui:Button
-                    x:Name="FFprobeLocation_Button"
-                    Content="Choose"
-                    Click="FFprobeLocation_Button_Click"
-                    Grid.Column="2"
-                />
-            </Grid>
+            <ui:Button
+                x:Name="SaveSettings_Button"
+                Margin="0,24,0,0"
+                Content="Save Settings"
+                Appearance="Primary"
+                Click="SaveSettings_Button_Click"
+                HorizontalAlignment="Right"
+            />
         </StackPanel>
     </ui:DynamicScrollViewer>
 </Page>

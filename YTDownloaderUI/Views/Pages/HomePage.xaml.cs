@@ -1,14 +1,15 @@
-﻿// This Source Code Form is subject to the terms of the MIT License.
+// This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file, You can obtain one at https://opensource.org/licenses/MIT.
 // Copyright (C) Leszek Pomianowski and WPF UI Contributors.
 // All Rights Reserved.
 
 using System;
-using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
 using Wpf.Ui.Appearance;
-using YTDownloaderUI.Models;
 using YTDownloaderUI.Properties;
+using YTDownloaderUI.Services;
 using YTDownloaderUI.Utils;
 
 namespace YTDownloaderUI.Views.Pages;
@@ -18,7 +19,8 @@ namespace YTDownloaderUI.Views.Pages;
 /// </summary>
 public partial class HomePage
 {
-    public ObservableCollection<VideoInfo> UrlsQueue { get; set; }
+    private readonly VideoInfoService _videoInfoService;
+    private readonly FFmpegService _ffmpegService;
 
     public HomePage()
     {
@@ -29,10 +31,27 @@ public partial class HomePage
 
         InitializeComponent();
 
-        UrlsQueue = new ObservableCollection<VideoInfo>();
+        _videoInfoService = VideoInfoService.Instance;
+        _ffmpegService = FFmpegService.Instance;
 
-        DataContext = UrlsQueue;
+        // Bind queue from service
+        QueueList.ItemsSource = _videoInfoService.Queue;
 
+        UpdateUIState();
+        UpdatePresetAvailability();
+
+        // Subscribe to FFmpeg availability changes
+        _ffmpegService.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(FFmpegService.IsFFmpegAvailable))
+            {
+                Dispatcher.Invoke(UpdatePresetAvailability);
+            }
+        };
+    }
+
+    private void UpdateUIState()
+    {
         if (string.IsNullOrEmpty(Settings.Default.YtDlpLocation))
         {
             StartDownload_Button.IsEnabled = false;
@@ -45,41 +64,58 @@ public partial class HomePage
         }
     }
 
-    private void AddToQueue_Button_Click(object sender, System.Windows.RoutedEventArgs e)
+    private void UpdatePresetAvailability()
+    {
+        bool ffmpegAvailable = _ffmpegService.IsFFmpegAvailable;
+
+        // Disable audio-only presets when ffmpeg is not available
+        foreach (var item in PresetComboBox.Items.Cast<ComboBoxItem>())
+        {
+            var tag = item.Tag?.ToString() ?? "";
+            // mp3 and aac require ffmpeg for audio extraction
+            if (tag == "mp3" || tag == "aac")
+            {
+                item.IsEnabled = ffmpegAvailable;
+                if (!ffmpegAvailable && PresetComboBox.SelectedItem == item)
+                {
+                    PresetComboBox.SelectedIndex = 0; // Reset to (None)
+                }
+            }
+        }
+
+        // Show warning if ffmpeg not found
+        FFmpegWarning.Visibility = ffmpegAvailable ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private async void AddToQueue_Button_Click(object sender, RoutedEventArgs e)
     {
         var urls = UrlList.Text.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries)
                                 .Where(x => x.Contains("youtu.be/") || x.Contains("youtube.com/"))
                                 .Select(x => x.Trim())
                                 .ToList();
 
-        var selectedPreset = (PresetComboBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag?.ToString() ?? "";
+        var selectedPreset = (PresetComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "";
 
         foreach (var url in urls)
         {
             var videoId = UrlParser.GetVideoId(url);
+            var normalizedUrl = $"https://youtu.be/{videoId}";
 
-            if (!UrlsQueue.Any(x => x.Url.Contains(videoId)))
+            // Check for duplicates
+            if (!_videoInfoService.IsInQueue(videoId))
             {
-                UrlsQueue.Add(new VideoInfo(
-                    url: $"https://youtu.be/{videoId}",
-                    status: "Queued",
-                    downloadProgress: 0.0,
-                    audioOnly: false,
-                    getPlaylist: false,
-                    getSubtitles: false,
-                    preset: selectedPreset));
+                await _videoInfoService.AddToQueueAsync(normalizedUrl, selectedPreset);
             }
         }
 
-        DataContext = this;
         UrlList.Text = "";
     }
 
-    private async void StartDownload_Button_Click(object sender, System.Windows.RoutedEventArgs e)
+    private async void StartDownload_Button_Click(object sender, RoutedEventArgs e)
     {
         StartDownload_Button.IsEnabled = false;
 
-        await DownloadUtil.ProcessQueue(UrlsQueue);
+        await DownloadUtil.ProcessQueue(_videoInfoService.Queue);
 
         StartDownload_Button.IsEnabled = true;
     }
