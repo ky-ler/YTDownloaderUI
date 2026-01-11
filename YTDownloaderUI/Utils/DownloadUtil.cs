@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using YTDownloaderUI.Models;
 using YTDownloaderUI.Properties;
+using YTDownloaderUI.Services;
 
 namespace YTDownloaderUI.Utils;
 
@@ -104,9 +105,10 @@ public class DownloadUtil
             args += "--write-subs ";
 
         // a lot of yt-dlp post-processing requires ffmpeg and/or ffprobe
-        if (!string.IsNullOrEmpty(Settings.Default.FFmpegLocation) && !string.IsNullOrEmpty(Settings.Default.FFprobeLocation))
+        var ffmpegService = FFmpegService.Instance;
+        if (ffmpegService.IsFFmpegAvailable)
         {
-            args += $"--ffmpeg-location {Settings.Default.FFmpegLocation} ";
+            args += $"--ffmpeg-location \"{ffmpegService.FFmpegPath}\" ";
 
             if (video.AudioOnly)
                 args += "-x ";

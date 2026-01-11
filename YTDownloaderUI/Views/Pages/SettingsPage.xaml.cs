@@ -9,6 +9,7 @@ using System.IO;
 using System.Windows;
 using Wpf.Ui.Appearance;
 using YTDownloaderUI.Properties;
+using YTDownloaderUI.Services;
 
 namespace YTDownloaderUI.Views.Pages;
 
@@ -64,52 +65,18 @@ public partial class SettingsPage
 
         if (result == true)
         {
-            Settings.Default.YtDlpLocation = dialog.FileName;
-            DataContext = dialog.FileName;
+            YtDlpLocation_TextBox.Text = dialog.FileName;
         }
     }
 
-    private void FFmpegLocation_Button_Click(object sender, RoutedEventArgs e)
+    private void SaveSettings_Button_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            FileName = "ffmpeg",
-            DefaultExt = ".exe",
-            Filter = "Executables (.exe)|*.exe",
-            InitialDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory)
-        };
-
-        bool? result = dialog.ShowDialog();
-
-        if (result == true)
-        {
-            Settings.Default.FFmpegLocation = dialog.FileName;
-            DataContext = dialog.FileName;
-        }
-    }
-
-    private void FFprobeLocation_Button_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            FileName = "ffprobe",
-            DefaultExt = ".exe",
-            Filter = "Executables (.exe)|*.exe",
-            InitialDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory)
-        };
-
-        bool? result = dialog.ShowDialog();
-
-        if (result == true)
-        {
-            Settings.Default.FFprobeLocation = dialog.FileName;
-            DataContext = dialog.FileName;
-        }
-    }
-
-    private void TextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
-    {
+        // Save yt-dlp path
+        Settings.Default.YtDlpLocation = YtDlpLocation_TextBox.Text;
         Settings.Default.Save();
+
+        // Re-validate FFmpeg availability (auto-detected based on yt-dlp location)
+        FFmpegService.Instance.ValidateFFmpeg();
     }
 
     private void Github_Hyperlink_Click(object sender, RoutedEventArgs e)
