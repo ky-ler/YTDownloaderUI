@@ -52,6 +52,8 @@ public partial class HomePage
                                 .Select(x => x.Trim())
                                 .ToList();
 
+        var selectedPreset = (PresetComboBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag?.ToString() ?? "";
+
         foreach (var url in urls)
         {
             var videoId = UrlParser.GetVideoId(url);
@@ -64,7 +66,8 @@ public partial class HomePage
                     downloadProgress: 0.0,
                     audioOnly: false,
                     getPlaylist: false,
-                    getSubtitles: false));
+                    getSubtitles: false,
+                    preset: selectedPreset));
             }
         }
 
