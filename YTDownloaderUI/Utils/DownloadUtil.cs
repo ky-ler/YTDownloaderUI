@@ -112,6 +112,9 @@ public class DownloadUtil
                 args += "-x ";
         }
 
+        if (!string.IsNullOrEmpty(video.Preset))
+            args += $"-t {video.Preset} ";
+
         args += video.Url;
 
         return args;

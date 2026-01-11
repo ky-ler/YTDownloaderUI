@@ -22,9 +22,21 @@
                 Margin="0"
                 FontSize="20"
                 FontWeight="Medium"
-                Text="Video Links" 
+                Text="Video Links"
             />
-            
+
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <TextBlock Text="Preset:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox x:Name="PresetComboBox" Width="120" SelectedIndex="0">
+                    <ComboBoxItem Content="(None)" Tag=""/>
+                    <ComboBoxItem Content="mp3" Tag="mp3"/>
+                    <ComboBoxItem Content="aac" Tag="aac"/>
+                    <ComboBoxItem Content="mp4" Tag="mp4"/>
+                    <ComboBoxItem Content="mkv" Tag="mkv"/>
+                    <ComboBoxItem Content="sleep" Tag="sleep"/>
+                </ComboBox>
+            </StackPanel>
+
             <ui:TextBox
                 x:Name="UrlList"
                 Margin="0,12,0,0"

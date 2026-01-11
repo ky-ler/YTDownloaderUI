@@ -9,7 +9,7 @@ public class VideoInfo : INotifyPropertyChanged
     private double downloadProgress = 0.0;
 
 
-    public VideoInfo(string url, string status, double downloadProgress, bool audioOnly, bool getPlaylist, bool getSubtitles)
+    public VideoInfo(string url, string status, double downloadProgress, bool audioOnly, bool getPlaylist, bool getSubtitles, string preset = "")
     {
         Url = url;
         Status = status;
@@ -17,6 +17,7 @@ public class VideoInfo : INotifyPropertyChanged
         AudioOnly = audioOnly;
         GetPlaylist = getPlaylist;
         GetSubtitles = getSubtitles;
+        Preset = preset;
     }
 
     public string Url { get; set; }
@@ -26,6 +27,8 @@ public class VideoInfo : INotifyPropertyChanged
     public bool GetPlaylist { get; set; } = false;
 
     public bool GetSubtitles { get; set; } = false;
+
+    public string Preset { get; set; } = string.Empty;
 
     public string Status
     {
