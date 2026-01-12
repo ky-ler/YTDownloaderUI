@@ -29,25 +29,6 @@
                 Text="Video Links"
             />
 
-            <!-- FFmpeg Warning -->
-            <StackPanel x:Name="FFmpegWarning" Visibility="Collapsed" Margin="0,12,0,0">
-                <ui:InfoBar
-                    Title="FFmpeg Not Found"
-                    Message="Audio presets (mp3, aac) are disabled."
-                    Severity="Warning"
-                    IsOpen="True"
-                    IsClosable="False"
-                />
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <TextBlock VerticalAlignment="Center">
-                        Download from
-                        <Hyperlink NavigateUri="https://www.ffmpeg.org/download.html" RequestNavigate="Hyperlink_RequestNavigate">ffmpeg.org</Hyperlink>
-                        and place in the tools folder.
-                    </TextBlock>
-                    <ui:Button Content="Refresh" Margin="12,0,0,0" Click="RefreshFFmpeg_Click" />
-                </StackPanel>
-            </StackPanel>
-
             <ui:TextBox
                 x:Name="UrlList"
                 Margin="0,12,0,0"
@@ -56,6 +37,29 @@
                 MaxLines="10"
                 TextChanged="UrlList_TextChanged"
             />
+
+            <Grid x:Name="FFmpegWarning" Visibility="Collapsed" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:InfoBar
+                    Grid.Column="0"
+                    Title="FFmpeg Not Found"
+                    Message="Format presets are disabled. Download from ffmpeg.org and place in the tools folder."
+                    Severity="Warning"
+                    IsOpen="True"
+                    IsClosable="False"
+                />
+                <ui:Button
+                    Grid.Column="1"
+                    Content="Refresh"
+                    VerticalAlignment="Center"
+                    Margin="8,0,0,0"
+                    Click="RefreshFFmpeg_Click"
+                />
+            </Grid>
+
 
             <!-- Options and Add to Queue -->
             <Grid Margin="0,12,0,0">

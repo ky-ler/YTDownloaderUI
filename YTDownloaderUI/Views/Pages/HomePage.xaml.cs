@@ -106,12 +106,12 @@ public partial class HomePage
     {
         bool ffmpegAvailable = _ffmpegService.IsFFmpegAvailable;
 
-        // Disable audio-only presets when ffmpeg is not available
+        // Disable all format presets when ffmpeg is not available
         foreach (var item in PresetComboBox.Items.Cast<ComboBoxItem>())
         {
             var tag = item.Tag?.ToString() ?? "";
-            // mp3 and aac require ffmpeg for audio extraction
-            if (tag == "mp3" || tag == "aac")
+            // mp3, aac, mp4, mkv all require ffmpeg
+            if (tag == "mp3" || tag == "aac" || tag == "mp4" || tag == "mkv")
             {
                 item.IsEnabled = ffmpegAvailable;
                 if (!ffmpegAvailable && PresetComboBox.SelectedItem == item)
@@ -219,12 +219,12 @@ public partial class HomePage
 
         // Check if any queue items require FFmpeg
         var requiresFFmpeg = _videoInfoService.Queue
-            .Any(v => v.Preset == "mp3" || v.Preset == "aac");
+            .Any(v => v.Preset == "mp3" || v.Preset == "aac" || v.Preset == "mp4" || v.Preset == "mkv");
 
         if (requiresFFmpeg && !_ffmpegService.IsFFmpegAvailable)
         {
             MessageBox.Show(
-                "Some items in the queue require FFmpeg (mp3/aac presets).\n\n" +
+                "Some items in the queue require FFmpeg.\n\n" +
                 "Download FFmpeg from ffmpeg.org and place ffmpeg.exe and ffprobe.exe in the tools folder.",
                 "FFmpeg Required",
                 MessageBoxButton.OK,
