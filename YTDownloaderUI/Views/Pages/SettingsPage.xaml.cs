@@ -4,12 +4,11 @@
 // All Rights Reserved.
 
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Windows;
+using Microsoft.Win32;
 using Wpf.Ui.Appearance;
 using YTDownloaderUI.Properties;
-using YTDownloaderUI.Services;
+using YTDownloaderUI.Utils;
 
 namespace YTDownloaderUI.Views.Pages;
 
@@ -30,9 +29,12 @@ public partial class SettingsPage
             LightThemeRadioButton.IsChecked = true;
 
         VersionInfo.Text = $"Version {GetAssemblyVersion()}";
+
+        // Load download directory setting
+        DownloadDirectoryTextBox.Text = Settings.Default.DownloadDirectory;
     }
 
-    private string GetAssemblyVersion()
+    private static string GetAssemblyVersion()
     {
         return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? String.Empty;
     }
@@ -51,36 +53,31 @@ public partial class SettingsPage
         Settings.Default.Save();
     }
 
-    private void YtDlpLocation_Button_Click(object sender, RoutedEventArgs e)
+    private void Github_Hyperlink_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new Microsoft.Win32.OpenFileDialog
+        BrowserUtil.OpenUrl("https://github.com/ky-ler/YTDownloaderUI");
+    }
+
+    private void BrowseDirectory_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog
         {
-            FileName = "yt-dlp",
-            DefaultExt = ".exe",
-            Filter = "Executables (.exe)|*.exe",
-            InitialDirectory = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory)
+            Title = "Select Download Directory",
+            Multiselect = false
         };
 
-        bool? result = dialog.ShowDialog();
-
-        if (result == true)
+        if (dialog.ShowDialog() == true)
         {
-            YtDlpLocation_TextBox.Text = dialog.FileName;
+            DownloadDirectoryTextBox.Text = dialog.FolderName;
+            Settings.Default.DownloadDirectory = dialog.FolderName;
+            Settings.Default.Save();
         }
     }
 
-    private void SaveSettings_Button_Click(object sender, RoutedEventArgs e)
+    private void ResetDirectory_Click(object sender, RoutedEventArgs e)
     {
-        // Save yt-dlp path
-        Settings.Default.YtDlpLocation = YtDlpLocation_TextBox.Text;
+        DownloadDirectoryTextBox.Text = "";
+        Settings.Default.DownloadDirectory = "";
         Settings.Default.Save();
-
-        // Re-validate FFmpeg availability (auto-detected based on yt-dlp location)
-        FFmpegService.Instance.ValidateFFmpeg();
-    }
-
-    private void Github_Hyperlink_Click(object sender, RoutedEventArgs e)
-    {
-        Process.Start(new ProcessStartInfo("https://github.com/ky-ler/YTDownloaderUI") { UseShellExecute = true });
     }
 }

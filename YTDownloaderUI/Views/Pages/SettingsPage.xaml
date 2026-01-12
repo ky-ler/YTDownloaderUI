@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:YTDownloaderUI.Views.Pages"
-    xmlns:properties="clr-namespace:YTDownloaderUI.Properties"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="SettingsPage"
@@ -36,7 +35,29 @@
                 FontSize="20"
                 FontWeight="Medium"
                 Margin="0,24,0,0"
-                Text="Personalization" 
+                Text="Downloads"
+            />
+
+            <TextBlock Margin="0,12,0,0" Text="Download Directory" />
+            <TextBlock Margin="0,4,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="Leave empty to use the default downloads folder." />
+
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:TextBox x:Name="DownloadDirectoryTextBox" Grid.Column="0" IsReadOnly="True" PlaceholderText="Default: ./downloads" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
+                    <ui:Button x:Name="BrowseButton" Content="Browse" Click="BrowseDirectory_Click" />
+                    <ui:Button x:Name="ResetButton" Content="Reset" Margin="8,0,0,0" Click="ResetDirectory_Click" />
+                </StackPanel>
+            </Grid>
+
+            <TextBlock
+                FontSize="20"
+                FontWeight="Medium"
+                Margin="0,24,0,0"
+                Text="Personalization"
             />
 
             <TextBlock Margin="0,12,0,0" Text="Theme" />
@@ -54,45 +75,54 @@
                 Margin="0,8,0,0"
                 Checked="OnDarkThemeRadioButtonChecked"
                 Content="Dark"
-                GroupName="themeSelect" 
+                GroupName="themeSelect"
             />
 
             <TextBlock
-                Margin="0,24,0,0"
                 FontSize="20"
                 FontWeight="Medium"
-                Text="Dependencies" 
-            />
-
-            <Label Margin="0,12,0,0">yt-dlp Location</Label>
-
-            <Grid Margin="0,12,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <ui:TextBox x:Name="YtDlpLocation_TextBox"
-                            Text="{Binding Source={StaticResource Settings}, Path=Default.YtDlpLocation, Mode=OneWay}"
-                />
-
-                <ui:Button
-                    x:Name="YtDlpLocation_Button"
-                    Content="Choose"
-                    Click="YtDlpLocation_Button_Click"
-                    Grid.Column="2"
-                />
-            </Grid>
-
-            <ui:Button
-                x:Name="SaveSettings_Button"
                 Margin="0,24,0,0"
-                Content="Save Settings"
-                Appearance="Primary"
-                Click="SaveSettings_Button_Click"
-                HorizontalAlignment="Right"
+                Text="License"
             />
+
+            <TextBlock Margin="0,12,0,0" FontSize="14" TextWrapping="Wrap">
+                YTDownloaderUI is licensed under the MIT License.
+            </TextBlock>
+
+            <TextBlock Margin="0,8,0,0" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                Copyright © 2026 ky-ler
+            </TextBlock>
+
+            <TextBlock Margin="0,8,0,0" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
+            </TextBlock>
+
+            <TextBlock
+                FontSize="20"
+                FontWeight="Medium"
+                Margin="0,24,0,0"
+                Text="Acknowledgments"
+            />
+
+            <TextBlock Margin="0,12,0,0" FontSize="14" Text="This application uses the following open source projects:" TextWrapping="Wrap" />
+
+            <StackPanel Margin="0,12,0,0">
+                <TextBlock FontWeight="SemiBold" Text="yt-dlp" />
+                <TextBlock Text="Video downloading - Unlicense" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <ui:Hyperlink Padding="0" Margin="0,4,0,0" NavigateUri="https://github.com/yt-dlp/yt-dlp">github.com/yt-dlp/yt-dlp</ui:Hyperlink>
+            </StackPanel>
+
+            <StackPanel Margin="0,12,0,0">
+                <TextBlock FontWeight="SemiBold" Text="WPF UI" />
+                <TextBlock Text="User interface framework - MIT License" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <ui:Hyperlink Padding="0" Margin="0,4,0,0" NavigateUri="https://github.com/lepoco/wpfui">github.com/lepoco/wpfui</ui:Hyperlink>
+            </StackPanel>
+
+            <StackPanel Margin="0,12,0,0">
+                <TextBlock FontWeight="SemiBold" Text="FFmpeg (Optional)" />
+                <TextBlock Text="Audio extraction - LGPL/GPL" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <ui:Hyperlink Padding="0" Margin="0,4,0,0" NavigateUri="https://www.ffmpeg.org/">ffmpeg.org</ui:Hyperlink>
+            </StackPanel>
         </StackPanel>
     </ui:DynamicScrollViewer>
 </Page>

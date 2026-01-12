@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using YTDownloaderUI.Models;
 using YTDownloaderUI.Properties;
@@ -12,61 +13,124 @@ namespace YTDownloaderUI.Utils;
 
 public class DownloadUtil
 {
-    private static async Task Download(VideoInfo video)
+    private static Process? _currentProcess;
+    private static readonly object _processLock = new();
+
+    private static async Task Download(VideoInfo video, CancellationToken cancellationToken)
     {
-        Process _p = new();
+        Process process = new();
         var cmdArgs = GetYtDlpOptions(video);
-        _p.StartInfo.FileName = Settings.Default.YtDlpLocation;
-        _p.StartInfo.RedirectStandardOutput = true;
-        _p.StartInfo.StandardOutputEncoding = Encoding.UTF8;
-        _p.StartInfo.UseShellExecute = false;
-        _p.StartInfo.CreateNoWindow = true;
-        _p.EnableRaisingEvents = true;
-        _p.StartInfo.Arguments = cmdArgs;
+        process.StartInfo.FileName = YtDlpService.Instance.YtDlpPath;
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+        process.StartInfo.UseShellExecute = false;
+        process.StartInfo.CreateNoWindow = true;
+        process.EnableRaisingEvents = true;
+        process.StartInfo.Arguments = cmdArgs;
 
         try
         {
-            if (!_p.Start())
-                throw new Exception("yt-dlg failed to start.");
+            if (!process.Start())
+                throw new Exception("yt-dlp failed to start.");
+
+            lock (_processLock)
+            {
+                _currentProcess = process;
+            }
 
             video.Status = "Downloading";
 
+            // Register cancellation to kill the process
+            using var registration = cancellationToken.Register(() =>
+            {
+                try
+                {
+                    if (!process.HasExited)
+                    {
+                        process.Kill(entireProcessTree: true);
+                    }
+                }
+                catch { }
+            });
+
             await Task.WhenAll(
-                GetDownloadProgress(_p.StandardOutput, video),
-                _p.WaitForExitAsync()
+                GetDownloadProgress(process.StandardOutput, video, cancellationToken),
+                process.WaitForExitAsync(cancellationToken)
             );
 
             video.Status = "Finished";
+        }
+        catch (OperationCanceledException)
+        {
+            video.Status = "Cancelled";
+            throw;
         }
         catch (Exception ex)
         {
             throw new Exception(ex.Message);
         }
+        finally
+        {
+            lock (_processLock)
+            {
+                _currentProcess = null;
+            }
+            process.Dispose();
+        }
     }
 
-    // This should probably be threaded
-    public static async Task ProcessQueue(ObservableCollection<VideoInfo> videos)
+    public static async Task ProcessQueue(ObservableCollection<VideoInfo> videos, CancellationToken cancellationToken)
     {
-        if (!File.Exists(Settings.Default.YtDlpLocation))
+        if (!YtDlpService.Instance.IsYtDlpAvailable)
             return;
 
         foreach (var video in videos)
         {
-            if (video.Status == "Finished") continue;
+            cancellationToken.ThrowIfCancellationRequested();
 
-            await Download(video);
+            if (video.Status == "Finished" || video.Status == "Cancelled") continue;
+
+            try
+            {
+                await Download(video, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // Mark remaining queued items as cancelled
+                foreach (var v in videos)
+                {
+                    if (v.Status == "Queued")
+                        v.Status = "Cancelled";
+                }
+                throw;
+            }
         }
     }
 
-    private static async Task GetDownloadProgress(StreamReader output, VideoInfo video)
+    public static void CancelCurrentDownload()
     {
-        // yt-dlg download status lines begin with [download]
+        lock (_processLock)
+        {
+            try
+            {
+                if (_currentProcess != null && !_currentProcess.HasExited)
+                {
+                    _currentProcess.Kill(entireProcessTree: true);
+                }
+            }
+            catch { }
+        }
+    }
+
+    private static async Task GetDownloadProgress(StreamReader output, VideoInfo video, CancellationToken cancellationToken)
+    {
+        // yt-dlp download status lines begin with [download]
         const string lineStart = "[download] ";
         const string findPercentage = "% of ";
 
-        while (true)
+        while (!cancellationToken.IsCancellationRequested)
         {
-            var line = await output.ReadLineAsync();
+            var line = await output.ReadLineAsync(cancellationToken);
 
             // Loop exit condition. line == null when yt-dlp exits
             if (line == null) return;
@@ -89,12 +153,22 @@ public class DownloadUtil
 
     private static string GetYtDlpOptions(VideoInfo video)
     {
-        string args = "-P ";
+        // Use custom download directory if set, otherwise default to ./downloads
+        var customPath = Settings.Default.DownloadDirectory;
+        var downloadsPath = string.IsNullOrWhiteSpace(customPath)
+            ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "downloads")
+            : customPath;
 
-        /*if (string.IsNullOrEmpty(Settings.Default.DownloadLocation))*/
-        args += $"{AppDomain.CurrentDomain.BaseDirectory}/downloads/ ";
-        /*        else
-                    args += $"{Settings.Default.DownloadLocation} ";*/
+        // Ensure the directory exists
+        Directory.CreateDirectory(downloadsPath);
+
+        string args = $"-P \"{downloadsPath}\" --force-overwrites ";
+
+        // Output template: include preset suffix when a preset is specified
+        if (!string.IsNullOrEmpty(video.Preset))
+        {
+            args += $"-o \"%(title)s_[{video.Preset}].%(ext)s\" ";
+        }
 
         if (video.GetPlaylist)
             args += "--yes-playlist ";
@@ -102,20 +176,20 @@ public class DownloadUtil
             args += "--no-playlist ";
 
         if (video.GetSubtitles)
-            args += "--write-subs ";
+            args += "--write-subs --write-auto-subs --sub-lang en ";
 
         // a lot of yt-dlp post-processing requires ffmpeg and/or ffprobe
         var ffmpegService = FFmpegService.Instance;
         if (ffmpegService.IsFFmpegAvailable)
         {
             args += $"--ffmpeg-location \"{ffmpegService.FFmpegPath}\" ";
-
-            if (video.AudioOnly)
-                args += "-x ";
         }
 
+        // Apply preset alias
         if (!string.IsNullOrEmpty(video.Preset))
+        {
             args += $"-t {video.Preset} ";
+        }
 
         args += video.Url;
 
