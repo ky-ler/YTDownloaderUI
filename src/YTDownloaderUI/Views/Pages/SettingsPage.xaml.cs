@@ -4,11 +4,11 @@
 // All Rights Reserved.
 
 using System;
+using System.Reflection;
 using System.Windows;
 using Microsoft.Win32;
 using Wpf.Ui.Appearance;
 using YTDownloaderUI.Properties;
-using YTDownloaderUI.Utils;
 
 namespace YTDownloaderUI.Views.Pages;
 
@@ -34,7 +34,7 @@ public partial class SettingsPage
 
     private static string GetAssemblyVersion()
     {
-        return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? String.Empty;
+        return Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split("+")[0] ?? string.Empty;
     }
 
     private void OnLightThemeRadioButtonChecked(object sender, RoutedEventArgs e)
