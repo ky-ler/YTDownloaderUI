@@ -10,32 +10,25 @@ public class YtDlpService : INotifyPropertyChanged
     private static YtDlpService? _instance;
     public static YtDlpService Instance => _instance ??= new YtDlpService();
 
-    private bool _isYtDlpAvailable;
-    private string? _ytDlpPath;
-
     public bool IsYtDlpAvailable
     {
-        get => _isYtDlpAvailable;
+        get;
         private set
         {
-            if (_isYtDlpAvailable != value)
-            {
-                _isYtDlpAvailable = value;
-                OnPropertyChanged();
-            }
+            if (field == value) return;
+            field = value;
+            OnPropertyChanged();
         }
     }
 
     public string? YtDlpPath
     {
-        get => _ytDlpPath;
+        get;
         private set
         {
-            if (_ytDlpPath != value)
-            {
-                _ytDlpPath = value;
-                OnPropertyChanged();
-            }
+            if (field == value) return;
+            field = value;
+            OnPropertyChanged();
         }
     }
 

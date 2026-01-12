@@ -30,7 +30,7 @@ public class VideoInfoService : INotifyPropertyChanged
 
     private VideoInfoService() { }
 
-    public async Task AddToQueueAsync(string url, string preset, bool getPlaylist = false, bool getSubtitles = false)
+    public Task AddToQueueAsync(string url, string preset, bool getPlaylist = false, bool getSubtitles = false)
     {
         var videoInfo = new VideoInfo(
             url: url,
@@ -44,6 +44,7 @@ public class VideoInfoService : INotifyPropertyChanged
 
         // Fire-and-forget title fetch
         _ = FetchTitleAsync(videoInfo);
+        return Task.CompletedTask;
     }
 
     public VideoInfo? FindDuplicate(string videoId, string preset, bool getPlaylist, bool getSubtitles)
@@ -58,21 +59,19 @@ public class VideoInfoService : INotifyPropertyChanged
     public void ReplaceInQueue(VideoInfo existing, string url, string preset, bool getPlaylist, bool getSubtitles)
     {
         var index = Queue.IndexOf(existing);
-        if (index >= 0)
-        {
-            var replacement = new VideoInfo(
-                url: url,
-                status: "Queued",
-                downloadProgress: 0.0,
-                getPlaylist: getPlaylist,
-                getSubtitles: getSubtitles,
-                preset: preset);
+        if (index < 0) return;
+        var replacement = new VideoInfo(
+            url: url,
+            status: "Queued",
+            downloadProgress: 0.0,
+            getPlaylist: getPlaylist,
+            getSubtitles: getSubtitles,
+            preset: preset);
 
-            Queue[index] = replacement;
+        Queue[index] = replacement;
 
-            // Fire-and-forget title fetch
-            _ = FetchTitleAsync(replacement);
-        }
+        // Fire-and-forget title fetch
+        _ = FetchTitleAsync(replacement);
     }
 
     private async Task FetchTitleAsync(VideoInfo video)
@@ -118,7 +117,12 @@ public class VideoInfoService : INotifyPropertyChanged
             }
             catch (OperationCanceledException)
             {
-                try { process.Kill(); } catch { }
+                try { process.Kill(); }
+                catch
+                {
+                    // ignored
+                }
+
                 video.Status = originalStatus;
                 return;
             }

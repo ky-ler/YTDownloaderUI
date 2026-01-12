@@ -1,14 +1,11 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace YTDownloaderUI.Models;
 
 public class VideoInfo : INotifyPropertyChanged
 {
-    private string status = "Queued";
-    private double downloadProgress = 0.0;
-    private string? title;
-
     public VideoInfo(string url, string status, double downloadProgress, bool getPlaylist, bool getSubtitles, string preset = "")
     {
         Url = url;
@@ -23,15 +20,13 @@ public class VideoInfo : INotifyPropertyChanged
 
     public string? Title
     {
-        get => title;
+        get;
         set
         {
-            if (title != value)
-            {
-                title = value;
-                OnPropertyChanged(nameof(Title));
-                OnPropertyChanged(nameof(DisplayName));
-            }
+            if (field == value) return;
+            field = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(DisplayName));
         }
     }
 
@@ -40,11 +35,11 @@ public class VideoInfo : INotifyPropertyChanged
     /// </summary>
     public string DisplayName => !string.IsNullOrEmpty(Title) ? Title : Url;
 
-    public bool GetPlaylist { get; set; } = false;
+    public bool GetPlaylist { get; set; }
 
-    public bool GetSubtitles { get; set; } = false;
+    public bool GetSubtitles { get; set; }
 
-    public string Preset { get; set; } = string.Empty;
+    public string Preset { get; set; }
 
     /// <summary>
     /// Returns a user-friendly preset display name
@@ -67,42 +62,34 @@ public class VideoInfo : INotifyPropertyChanged
 
     public string Status
     {
-        get => status;
+        get;
         set
         {
-            string newValue = value;
-            string oldValue = status;
+            var oldValue = field;
 
-            if (newValue != oldValue)
-            {
-                status = newValue;
-                OnPropertyChanged(nameof(Status));
-            }
+            if (value == oldValue) return;
+            field = value;
+            OnPropertyChanged();
         }
     }
 
     public double DownloadProgress
     {
-        get => downloadProgress;
+        get;
         set
         {
-            double newValue = value;
-            double oldValue = downloadProgress;
+            var oldValue = field;
 
-            if (newValue != oldValue)
-            {
-                downloadProgress = newValue;
-                OnPropertyChanged(nameof(DownloadProgress));
-            }
+            const double tolerance = 0.0001;
+            if (Math.Abs(value - oldValue) < tolerance) return;
+            field = value;
+            OnPropertyChanged();
         }
-    }
+    } = 0.0;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged([CallerMemberName] string name = "")
     {
-        if (PropertyChanged == null)
-            return;
-
-        PropertyChanged.Invoke(this, new PropertyChangedEventArgs(name));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

@@ -10,46 +10,36 @@ public class FFmpegService : INotifyPropertyChanged
     private static FFmpegService? _instance;
     public static FFmpegService Instance => _instance ??= new FFmpegService();
 
-    private bool _isFFmpegAvailable;
-    private string? _ffmpegPath;
-    private string? _ffprobePath;
-
     public bool IsFFmpegAvailable
     {
-        get => _isFFmpegAvailable;
+        get;
         private set
         {
-            if (_isFFmpegAvailable != value)
-            {
-                _isFFmpegAvailable = value;
-                OnPropertyChanged();
-            }
+            if (field == value) return;
+            field = value;
+            OnPropertyChanged();
         }
     }
 
     public string? FFmpegPath
     {
-        get => _ffmpegPath;
+        get;
         private set
         {
-            if (_ffmpegPath != value)
-            {
-                _ffmpegPath = value;
-                OnPropertyChanged();
-            }
+            if (field == value) return;
+            field = value;
+            OnPropertyChanged();
         }
     }
 
     public string? FFprobePath
     {
-        get => _ffprobePath;
+        get;
         private set
         {
-            if (_ffprobePath != value)
-            {
-                _ffprobePath = value;
-                OnPropertyChanged();
-            }
+            if (field == value) return;
+            field = value;
+            OnPropertyChanged();
         }
     }
 

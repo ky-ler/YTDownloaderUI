@@ -44,23 +44,22 @@ public static class UrlParser
     {
         var cleanUrl = StripSpaces(url);
 
-        string videoId;
-        int findIndex = 0;
+        var findIndex = 0;
 
-        var regularUrl = "youtube.com/watch?v=";
-        var miniLink = "youtu.be/";
-        var shorts = "shorts/";
+        const string regularUrl = "youtube.com/watch?v=";
+        const string miniLink = "youtu.be/";
+        const string shorts = "shorts/";
 
         if (cleanUrl.Contains(shorts))
-            findIndex = cleanUrl.IndexOf(shorts) + shorts.Length;
+            findIndex = cleanUrl.IndexOf(shorts, StringComparison.Ordinal) + shorts.Length;
 
         else if (cleanUrl.Contains(regularUrl))
-            findIndex = cleanUrl.IndexOf(regularUrl) + regularUrl.Length;
+            findIndex = cleanUrl.IndexOf(regularUrl, StringComparison.Ordinal) + regularUrl.Length;
 
         else if (cleanUrl.Contains(miniLink))
-            findIndex = cleanUrl.IndexOf(miniLink) + miniLink.Length;
+            findIndex = cleanUrl.IndexOf(miniLink, StringComparison.Ordinal) + miniLink.Length;
 
-        videoId = cleanUrl[findIndex..];
+        var videoId = cleanUrl[findIndex..];
 
         // Split url at &, example: https://www.youtube.com/watch?v=VIDEO_ID&feature=youtu.be
         var endIndex = videoId.IndexOf('&');
@@ -88,7 +87,6 @@ public static class UrlParser
             return $"https://www.youtube.com/playlist?list={playlistId}";
         }
 
-        // For video URLs, return the youtu.be format
         var videoId = GetVideoId(cleanUrl);
 
         // only return youtu.be/id if it was used in the original URL
@@ -100,12 +98,7 @@ public static class UrlParser
             return $"https://www.youtube.com/watch?v={videoId}&list={playlistId}";
         }
 
-        if (videoId.StartsWith("shorts/"))
-        {
-            return $"https://www.youtube.com/{videoId}";
-        }
-
-        return $"https://www.youtube.com/watch?v={videoId}";
+        return videoId.StartsWith("shorts/") ? $"https://www.youtube.com/{videoId}" : $"https://www.youtube.com/watch?v={videoId}";
     }
 
     private static string StripSpaces(string url)

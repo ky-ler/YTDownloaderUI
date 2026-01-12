@@ -14,7 +14,7 @@ namespace YTDownloaderUI.Utils;
 public class DownloadUtil
 {
     private static Process? _currentProcess;
-    private static readonly object _processLock = new();
+    private static readonly Lock ProcessLock = new();
 
     private static async Task Download(VideoInfo video, CancellationToken cancellationToken)
     {
@@ -33,7 +33,7 @@ public class DownloadUtil
             if (!process.Start())
                 throw new Exception("yt-dlp failed to start.");
 
-            lock (_processLock)
+            lock (ProcessLock)
             {
                 _currentProcess = process;
             }
@@ -41,7 +41,7 @@ public class DownloadUtil
             video.Status = "Downloading";
 
             // Register cancellation to kill the process
-            using var registration = cancellationToken.Register(() =>
+            await using var registration = cancellationToken.Register(() =>
             {
                 try
                 {
@@ -50,7 +50,10 @@ public class DownloadUtil
                         process.Kill(entireProcessTree: true);
                     }
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             });
 
             await Task.WhenAll(
@@ -71,7 +74,7 @@ public class DownloadUtil
         }
         finally
         {
-            lock (_processLock)
+            lock (ProcessLock)
             {
                 _currentProcess = null;
             }
@@ -88,7 +91,7 @@ public class DownloadUtil
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (video.Status == "Finished" || video.Status == "Cancelled") continue;
+            if (video.Status is "Finished" or "Cancelled") continue;
 
             try
             {
@@ -109,16 +112,19 @@ public class DownloadUtil
 
     public static void CancelCurrentDownload()
     {
-        lock (_processLock)
+        lock (ProcessLock)
         {
             try
             {
-                if (_currentProcess != null && !_currentProcess.HasExited)
+                if (_currentProcess is { HasExited: false })
                 {
                     _currentProcess.Kill(entireProcessTree: true);
                 }
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
     }
 
@@ -140,12 +146,12 @@ public class DownloadUtil
             // lineStart.Length = 11
             line = line[11..];
 
-            int percentageIndex = line.IndexOf(findPercentage);
+            var percentageIndex = line.IndexOf(findPercentage, StringComparison.Ordinal);
 
             // Shouldn't happen, but check anyways
             if (percentageIndex < 0) continue;
 
-            double percentage = Convert.ToDouble(line[..percentageIndex]) / 100;
+            var percentage = Convert.ToDouble(line[..percentageIndex]) / 100;
 
             video.DownloadProgress = percentage;
         }
@@ -162,7 +168,7 @@ public class DownloadUtil
         // Ensure the directory exists
         Directory.CreateDirectory(downloadsPath);
 
-        string args = $"-P \"{downloadsPath}\" --force-overwrites ";
+        var args = $"-P \"{downloadsPath}\" --force-overwrites ";
 
         // Output template: include preset suffix when a preset is specified
         if (!string.IsNullOrEmpty(video.Preset))
