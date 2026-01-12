@@ -9,12 +9,11 @@ public class VideoInfo : INotifyPropertyChanged
     private double downloadProgress = 0.0;
     private string? title;
 
-    public VideoInfo(string url, string status, double downloadProgress, bool audioOnly, bool getPlaylist, bool getSubtitles, string preset = "")
+    public VideoInfo(string url, string status, double downloadProgress, bool getPlaylist, bool getSubtitles, string preset = "")
     {
         Url = url;
         Status = status;
         DownloadProgress = downloadProgress;
-        AudioOnly = audioOnly;
         GetPlaylist = getPlaylist;
         GetSubtitles = getSubtitles;
         Preset = preset;
@@ -41,8 +40,6 @@ public class VideoInfo : INotifyPropertyChanged
     /// </summary>
     public string DisplayName => !string.IsNullOrEmpty(Title) ? Title : Url;
 
-    public bool AudioOnly { get; set; } = false;
-
     public bool GetPlaylist { get; set; } = false;
 
     public bool GetSubtitles { get; set; } = false;
@@ -52,7 +49,21 @@ public class VideoInfo : INotifyPropertyChanged
     /// <summary>
     /// Returns a user-friendly preset display name
     /// </summary>
-    public string PresetDisplay => string.IsNullOrEmpty(Preset) ? "(None)" : Preset.ToUpper();
+    public string PresetDisplay => string.IsNullOrEmpty(Preset) ? "Default" : Preset.ToUpper();
+
+    /// <summary>
+    /// Returns a tooltip describing the download options
+    /// </summary>
+    public string OptionsTooltip
+    {
+        get
+        {
+            var options = new System.Collections.Generic.List<string>();
+            if (GetPlaylist) options.Add("Playlist");
+            if (GetSubtitles) options.Add("Subtitles");
+            return options.Count > 0 ? string.Join(", ", options) : "No extra options";
+        }
+    }
 
     public string Status
     {
