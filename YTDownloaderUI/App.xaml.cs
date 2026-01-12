@@ -13,7 +13,8 @@ namespace YTDownloaderUI
         {
             base.OnStartup(e);
 
-            // Initialize services at startup (triggers initial FFmpeg validation)
+            // Initialize services at startup
+            _ = YtDlpService.Instance;
             _ = FFmpegService.Instance;
             _ = VideoInfoService.Instance;
         }

@@ -37,5 +37,14 @@
     </None>
   </ItemGroup>
 
+  <!-- Bundled tools -->
+  <ItemGroup>
+    <Content Include="tools\yt-dlp.exe" Condition="Exists('tools\yt-dlp.exe')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="tools\LICENSES\*" Condition="Exists('tools\LICENSES')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
 </Project>

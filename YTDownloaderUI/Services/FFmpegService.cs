@@ -2,7 +2,6 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
-using YTDownloaderUI.Properties;
 
 namespace YTDownloaderUI.Services;
 
@@ -66,50 +65,18 @@ public class FFmpegService : INotifyPropertyChanged
         IsFFmpegAvailable = !string.IsNullOrEmpty(FFmpegPath) && !string.IsNullOrEmpty(FFprobePath);
     }
 
-    private string? FindFFmpeg()
+    private static string? FindFFmpeg()
     {
-        // Priority 1: Same directory as yt-dlp.exe
-        if (!string.IsNullOrEmpty(Settings.Default.YtDlpLocation))
-        {
-            var ytdlpDir = Path.GetDirectoryName(Settings.Default.YtDlpLocation);
-            if (!string.IsNullOrEmpty(ytdlpDir))
-            {
-                var ffmpegInYtdlp = Path.Combine(ytdlpDir, "ffmpeg.exe");
-                if (File.Exists(ffmpegInYtdlp))
-                    return ffmpegInYtdlp;
-            }
-        }
-
-        // Priority 2: Application directory
         var appDir = AppDomain.CurrentDomain.BaseDirectory;
-        var ffmpegInApp = Path.Combine(appDir, "ffmpeg.exe");
-        if (File.Exists(ffmpegInApp))
-            return ffmpegInApp;
-
-        return null;
+        var ffmpegPath = Path.Combine(appDir, "tools", "ffmpeg.exe");
+        return File.Exists(ffmpegPath) ? ffmpegPath : null;
     }
 
-    private string? FindFFprobe()
+    private static string? FindFFprobe()
     {
-        // Priority 1: Same directory as yt-dlp.exe
-        if (!string.IsNullOrEmpty(Settings.Default.YtDlpLocation))
-        {
-            var ytdlpDir = Path.GetDirectoryName(Settings.Default.YtDlpLocation);
-            if (!string.IsNullOrEmpty(ytdlpDir))
-            {
-                var ffprobeInYtdlp = Path.Combine(ytdlpDir, "ffprobe.exe");
-                if (File.Exists(ffprobeInYtdlp))
-                    return ffprobeInYtdlp;
-            }
-        }
-
-        // Priority 2: Application directory
         var appDir = AppDomain.CurrentDomain.BaseDirectory;
-        var ffprobeInApp = Path.Combine(appDir, "ffprobe.exe");
-        if (File.Exists(ffprobeInApp))
-            return ffprobeInApp;
-
-        return null;
+        var ffprobePath = Path.Combine(appDir, "tools", "ffprobe.exe");
+        return File.Exists(ffprobePath) ? ffprobePath : null;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
