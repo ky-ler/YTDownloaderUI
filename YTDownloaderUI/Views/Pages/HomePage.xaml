@@ -16,6 +16,10 @@
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
     >
 
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Page.Resources>
+
     <ui:DynamicScrollViewer>
         <StackPanel Name="Home_Panel" Margin="42">
             <TextBlock
@@ -25,28 +29,24 @@
                 Text="Video Links"
             />
 
-            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                <TextBlock Text="Preset:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox x:Name="PresetComboBox" Width="120" SelectedIndex="0">
-                    <ComboBoxItem Content="(None)" Tag=""/>
-                    <ComboBoxItem Content="mp3" Tag="mp3"/>
-                    <ComboBoxItem Content="aac" Tag="aac"/>
-                    <ComboBoxItem Content="mp4" Tag="mp4"/>
-                    <ComboBoxItem Content="mkv" Tag="mkv"/>
-                    <ComboBoxItem Content="sleep" Tag="sleep"/>
-                </ComboBox>
-            </StackPanel>
-
             <!-- FFmpeg Warning -->
-            <ui:InfoBar
-                x:Name="FFmpegWarning"
-                Title="FFmpeg Not Found"
-                Message="Audio presets (mp3, aac) are disabled. Place ffmpeg.exe next to yt-dlp.exe or in the application folder."
-                Severity="Warning"
-                IsOpen="True"
-                Visibility="Collapsed"
-                Margin="0,12,0,0"
-            />
+            <StackPanel x:Name="FFmpegWarning" Visibility="Collapsed" Margin="0,12,0,0">
+                <ui:InfoBar
+                    Title="FFmpeg Not Found"
+                    Message="Audio presets (mp3, aac) are disabled."
+                    Severity="Warning"
+                    IsOpen="True"
+                    IsClosable="False"
+                />
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBlock VerticalAlignment="Center">
+                        Download from
+                        <Hyperlink NavigateUri="https://www.ffmpeg.org/download.html" RequestNavigate="Hyperlink_RequestNavigate">ffmpeg.org</Hyperlink>
+                        and place in the tools folder.
+                    </TextBlock>
+                    <ui:Button Content="Refresh" Margin="12,0,0,0" Click="RefreshFFmpeg_Click" />
+                </StackPanel>
+            </StackPanel>
 
             <ui:TextBox
                 x:Name="UrlList"
@@ -54,15 +54,66 @@
                 AcceptsReturn="True"
                 MinLines="4"
                 MaxLines="10"
+                TextChanged="UrlList_TextChanged"
             />
-            
-            <ui:Button
-                x:Name="AddToQueue_Button"
-                Margin="0,12,0,0"
-                Content="Add to Queue"
-                HorizontalAlignment="Right"
-                Click="AddToQueue_Button_Click"
-            />
+
+            <!-- Options and Add to Queue -->
+            <Grid Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Checkboxes -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <CheckBox x:Name="PlaylistCheckBox" Content="Download Playlist" Margin="0,0,16,0" />
+                    <CheckBox x:Name="SubtitlesCheckBox" Content="Download Subtitles" />
+                </StackPanel>
+
+                <!-- Preset and Add to Queue button -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Preset:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <ComboBox x:Name="PresetComboBox" Width="100" SelectedIndex="0" Margin="0,0,12,0">
+                        <ComboBoxItem Content="Default" Tag=""/>
+                        <ComboBoxItem Content="mp3" Tag="mp3"/>
+                        <ComboBoxItem Content="aac" Tag="aac"/>
+                        <ComboBoxItem Content="mp4" Tag="mp4"/>
+                        <ComboBoxItem Content="mkv" Tag="mkv"/>
+                        <ComboBoxItem Content="sleep" Tag="sleep"/>
+                    </ComboBox>
+                    <ui:Button
+                        x:Name="AddToQueue_Button"
+                        Content="Add to Queue"
+                        Click="AddToQueue_Button_Click"
+                        IsEnabled="False"
+                    />
+                </StackPanel>
+            </Grid>
+
+            <!-- Duplicate Warning -->
+            <Grid x:Name="DuplicateWarningContainer" Visibility="Collapsed" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:InfoBar
+                    x:Name="DuplicateWarning"
+                    Grid.Column="0"
+                    Title="Duplicate Detected"
+                    Message="One or more URLs were already in the queue with the same preset."
+                    Severity="Warning"
+                    IsOpen="True"
+                    IsClosable="False"
+                />
+                <ui:Button
+                    Grid.Column="1"
+                    Content="✕"
+                    VerticalAlignment="Center"
+                    Margin="8,0,0,0"
+                    Click="DuplicateWarning_Dismiss_Click"
+                />
+            </Grid>
             
             <TextBlock
                 Margin="0,24,0,0"
@@ -77,6 +128,7 @@
                         <Grid Margin="0,4,0,4">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="60" />
                                 <ColumnDefinition Width="80" />
                                 <ColumnDefinition Width="120" />
                                 <ColumnDefinition Width="70" />
@@ -90,10 +142,29 @@
                                 ToolTip="{Binding Url}"
                             />
 
+                            <!-- Options indicators -->
+                            <StackPanel
+                                Grid.Column="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                ToolTip="{Binding OptionsTooltip}">
+                                <TextBlock
+                                    Text="P"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource SystemAccentColorPrimaryBrush}"
+                                    Visibility="{Binding GetPlaylist, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    Margin="0,0,4,0" />
+                                <TextBlock
+                                    Text="S"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource SystemAccentColorPrimaryBrush}"
+                                    Visibility="{Binding GetSubtitles, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            </StackPanel>
+
                             <!-- Preset -->
                             <TextBlock
                                 Text="{Binding PresetDisplay}"
-                                Grid.Column="1"
+                                Grid.Column="2"
                                 HorizontalAlignment="Center"
                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             />
@@ -101,7 +172,7 @@
                             <!-- Status -->
                             <TextBlock
                                 Text="{Binding Status}"
-                                Grid.Column="2"
+                                Grid.Column="3"
                                 HorizontalAlignment="Right"
                             />
 
@@ -109,7 +180,7 @@
                             <TextBlock
                                 x:Name="DlProgress"
                                 Text="{Binding DownloadProgress, StringFormat=p1}"
-                                Grid.Column="3"
+                                Grid.Column="4"
                                 HorizontalAlignment="Right"
                             />
 
@@ -118,13 +189,28 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <ui:Button
-                x:Name="StartDownload_Button"
-                Margin="0,12,0,0"
-                Content="Download"
-                HorizontalAlignment="Right"
-                Click="StartDownload_Button_Click"
-            />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                <ui:Button
+                    x:Name="ClearQueue_Button"
+                    Content="Clear"
+                    Click="ClearQueue_Button_Click"
+                    IsEnabled="False"
+                />
+                <ui:Button
+                    x:Name="CancelDownload_Button"
+                    Margin="12,0,0,0"
+                    Content="Cancel"
+                    Click="CancelDownload_Button_Click"
+                    Visibility="Collapsed"
+                />
+                <ui:Button
+                    x:Name="StartDownload_Button"
+                    Margin="12,0,0,0"
+                    Content="Download"
+                    Click="StartDownload_Button_Click"
+                    IsEnabled="False"
+                />
+            </StackPanel>
 
             <TextBlock
                 x:Name="StatusText"
