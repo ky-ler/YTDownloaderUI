@@ -94,5 +94,17 @@ namespace YTDownloaderUI.Properties {
                 this["FFprobeLocation"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DownloadDirectory {
+            get {
+                return ((string)(this["DownloadDirectory"]));
+            }
+            set {
+                this["DownloadDirectory"] = value;
+            }
+        }
     }
 }
