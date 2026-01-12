@@ -21,7 +21,7 @@
     </Page.Resources>
 
     <ui:DynamicScrollViewer>
-        <StackPanel Name="Home_Panel" Margin="42">
+        <StackPanel Name="HomePanel" Margin="42">
             <TextBlock
                 Margin="0"
                 FontSize="20"
@@ -87,7 +87,7 @@
                         <ComboBoxItem Content="sleep" Tag="sleep"/>
                     </ComboBox>
                     <ui:Button
-                        x:Name="AddToQueue_Button"
+                        x:Name="AddToQueueButton"
                         Content="Add to Queue"
                         Click="AddToQueue_Button_Click"
                         IsEnabled="False"
@@ -118,7 +118,7 @@
                     Click="DuplicateWarning_Dismiss_Click"
                 />
             </Grid>
-            
+
             <TextBlock
                 Margin="0,24,0,0"
                 FontSize="20"
@@ -195,20 +195,20 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
                 <ui:Button
-                    x:Name="ClearQueue_Button"
+                    x:Name="ClearQueueButton"
                     Content="Clear"
                     Click="ClearQueue_Button_Click"
                     IsEnabled="False"
                 />
                 <ui:Button
-                    x:Name="CancelDownload_Button"
+                    x:Name="CancelDownloadButton"
                     Margin="12,0,0,0"
                     Content="Cancel"
                     Click="CancelDownload_Button_Click"
                     Visibility="Collapsed"
                 />
                 <ui:Button
-                    x:Name="StartDownload_Button"
+                    x:Name="StartDownloadButton"
                     Margin="12,0,0,0"
                     Content="Download"
                     Click="StartDownload_Button_Click"

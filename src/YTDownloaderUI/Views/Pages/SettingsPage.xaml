@@ -17,7 +17,7 @@
     >
 
     <ui:DynamicScrollViewer>
-        <StackPanel Name="Settings_Panel" Margin="42">
+        <StackPanel Name="SettingsPanel" Margin="42">
             <TextBlock
                 Margin="0"
                 FontSize="20"
@@ -29,7 +29,7 @@
 
             <TextBlock x:Name="CreatorInfo" Margin="0,12,0,0" FontSize="14" Text="Created by ky-ler" />
 
-            <ui:Hyperlink Padding="0" Margin="0,12,0,0" NavigateUri="https://github.com/ky-ler/YTDownloaderUI">View on GitHub</ui:Hyperlink>
+            <ui:HyperlinkButton Padding="0" Margin="0,12,0,0" NavigateUri="https://github.com/ky-ler/YTDownloaderUI">View on GitHub</ui:HyperlinkButton>
 
             <TextBlock
                 FontSize="20"
@@ -109,19 +109,19 @@
             <StackPanel Margin="0,12,0,0">
                 <TextBlock FontWeight="SemiBold" Text="yt-dlp" />
                 <TextBlock Text="Video downloading - Unlicense" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                <ui:Hyperlink Padding="0" Margin="0,4,0,0" NavigateUri="https://github.com/yt-dlp/yt-dlp">github.com/yt-dlp/yt-dlp</ui:Hyperlink>
+                <ui:HyperlinkButton Padding="0" Margin="0,4,0,0" NavigateUri="https://github.com/yt-dlp/yt-dlp">github.com/yt-dlp/yt-dlp</ui:HyperlinkButton>
             </StackPanel>
 
             <StackPanel Margin="0,12,0,0">
                 <TextBlock FontWeight="SemiBold" Text="WPF UI" />
                 <TextBlock Text="User interface framework - MIT License" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                <ui:Hyperlink Padding="0" Margin="0,4,0,0" NavigateUri="https://github.com/lepoco/wpfui">github.com/lepoco/wpfui</ui:Hyperlink>
+                <ui:HyperlinkButton Padding="0" Margin="0,4,0,0" NavigateUri="https://github.com/lepoco/wpfui">github.com/lepoco/wpfui</ui:HyperlinkButton>
             </StackPanel>
 
             <StackPanel Margin="0,12,0,0">
                 <TextBlock FontWeight="SemiBold" Text="FFmpeg (Optional)" />
                 <TextBlock Text="Audio extraction - LGPL/GPL" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                <ui:Hyperlink Padding="0" Margin="0,4,0,0" NavigateUri="https://www.ffmpeg.org/">ffmpeg.org</ui:Hyperlink>
+                <ui:HyperlinkButton Padding="0" Margin="0,4,0,0" NavigateUri="https://www.ffmpeg.org/">ffmpeg.org</ui:HyperlinkButton>
             </StackPanel>
         </StackPanel>
     </ui:DynamicScrollViewer>

@@ -19,11 +19,9 @@ public partial class SettingsPage
 {
     public SettingsPage()
     {
-        DataContext = this;
-
         InitializeComponent();
 
-        if (Theme.GetAppTheme() == ThemeType.Dark)
+        if (ApplicationThemeManager.GetAppTheme() == ApplicationTheme.Dark)
             DarkThemeRadioButton.IsChecked = true;
         else
             LightThemeRadioButton.IsChecked = true;
@@ -41,14 +39,14 @@ public partial class SettingsPage
 
     private void OnLightThemeRadioButtonChecked(object sender, RoutedEventArgs e)
     {
-        Theme.Apply(ThemeType.Light);
+        ApplicationThemeManager.Apply(ApplicationTheme.Light);
         Settings.Default.Theme = "Light";
         Settings.Default.Save();
     }
 
     private void OnDarkThemeRadioButtonChecked(object sender, RoutedEventArgs e)
     {
-        Theme.Apply(ThemeType.Dark);
+        ApplicationThemeManager.Apply(ApplicationTheme.Dark);
         Settings.Default.Theme = "Dark";
         Settings.Default.Save();
     }
@@ -61,12 +59,10 @@ public partial class SettingsPage
             Multiselect = false
         };
 
-        if (dialog.ShowDialog() == true)
-        {
-            DownloadDirectoryTextBox.Text = dialog.FolderName;
-            Settings.Default.DownloadDirectory = dialog.FolderName;
-            Settings.Default.Save();
-        }
+        if (dialog.ShowDialog() != true) return;
+        DownloadDirectoryTextBox.Text = dialog.FolderName;
+        Settings.Default.DownloadDirectory = dialog.FolderName;
+        Settings.Default.Save();
     }
 
     private void ResetDirectory_Click(object sender, RoutedEventArgs e)

@@ -4,13 +4,10 @@
 // All Rights Reserved.
 
 using System;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Navigation;
-using Wpf.Ui.Appearance;
 using YTDownloaderUI.Properties;
 using YTDownloaderUI.Services;
 using YTDownloaderUI.Utils;
@@ -27,13 +24,19 @@ public partial class HomePage
     private readonly YtDlpService _ytDlpService;
     private CancellationTokenSource? _downloadCts;
 
+    private static string GetDownloadDirectory()
+    {
+        var configuredPath = Settings.Default.DownloadDirectory;
+
+        // Use configured directory if set, otherwise default to ./downloads
+        if (!string.IsNullOrWhiteSpace(configuredPath))
+            return configuredPath;
+
+        return System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "downloads");
+    }
+
     public HomePage()
     {
-        if (Settings.Default.Theme == "Light")
-            Theme.Apply(ThemeType.Light);
-        else
-            Theme.Apply(ThemeType.Dark);
-
         InitializeComponent();
 
         _videoInfoService = VideoInfoService.Instance;
@@ -98,8 +101,8 @@ public partial class HomePage
         bool isFetching = _videoInfoService.IsFetchingTitles;
         bool canDownload = hasItems && _ytDlpService.IsYtDlpAvailable && !isFetching;
 
-        StartDownload_Button.IsEnabled = canDownload;
-        ClearQueue_Button.IsEnabled = hasItems;
+        StartDownloadButton.IsEnabled = canDownload;
+        ClearQueueButton.IsEnabled = hasItems;
     }
 
     private void UpdatePresetAvailability()
@@ -189,7 +192,7 @@ public partial class HomePage
 
     private void UrlList_TextChanged(object sender, TextChangedEventArgs e)
     {
-        AddToQueue_Button.IsEnabled = !string.IsNullOrWhiteSpace(UrlList.Text);
+        AddToQueueButton.IsEnabled = !string.IsNullOrWhiteSpace(UrlList.Text);
     }
 
     private void ClearQueue_Button_Click(object sender, RoutedEventArgs e)
@@ -199,6 +202,11 @@ public partial class HomePage
 
     private async void StartDownload_Button_Click(object sender, RoutedEventArgs e)
     {
+        // Get the download directory and create it if it doesn't exist
+        var downloadPath = GetDownloadDirectory();
+        if (!System.IO.Directory.Exists(downloadPath))
+            System.IO.Directory.CreateDirectory(downloadPath);
+
         // Re-run detection (catches newly added executables since app start)
         _ytDlpService.ValidateYtDlp();
         _ffmpegService.ValidateFFmpeg();
@@ -233,9 +241,9 @@ public partial class HomePage
         }
 
         // Set up UI for downloading state
-        StartDownload_Button.IsEnabled = false;
-        CancelDownload_Button.Visibility = Visibility.Visible;
-        ClearQueue_Button.IsEnabled = false;
+        StartDownloadButton.IsEnabled = false;
+        CancelDownloadButton.Visibility = Visibility.Visible;
+        ClearQueueButton.IsEnabled = false;
 
         _downloadCts = new CancellationTokenSource();
 
@@ -253,7 +261,7 @@ public partial class HomePage
             _downloadCts = null;
 
             // Restore UI state
-            CancelDownload_Button.Visibility = Visibility.Collapsed;
+            CancelDownloadButton.Visibility = Visibility.Collapsed;
             UpdateQueueButtonStates();
         }
     }

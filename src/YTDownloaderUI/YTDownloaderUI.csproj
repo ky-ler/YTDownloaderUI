@@ -2,12 +2,13 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows7.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <Authors>ky-ler</Authors>
     <Description>Download YouTube videos</Description>
-    <Version>1.2.1</Version>
+    <Version>2.0.0-pre</Version>
+    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -19,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WPF-UI" Version="3.0.0-preview.2" />
+    <PackageReference Include="WPF-UI" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>
