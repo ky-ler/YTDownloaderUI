@@ -264,12 +264,6 @@ public partial class HomePage
         DownloadUtil.CancelCurrentDownload();
     }
 
-    private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
-    {
-        BrowserUtil.OpenUrl(e.Uri.AbsoluteUri);
-        e.Handled = true;
-    }
-
     private void RefreshFFmpeg_Click(object sender, RoutedEventArgs e)
     {
         _ffmpegService.ValidateFFmpeg();

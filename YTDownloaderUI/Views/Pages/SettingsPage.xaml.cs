@@ -53,11 +53,6 @@ public partial class SettingsPage
         Settings.Default.Save();
     }
 
-    private void Github_Hyperlink_Click(object sender, RoutedEventArgs e)
-    {
-        BrowserUtil.OpenUrl("https://github.com/ky-ler/YTDownloaderUI");
-    }
-
     private void BrowseDirectory_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFolderDialog

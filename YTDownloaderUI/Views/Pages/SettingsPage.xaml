@@ -29,7 +29,7 @@
 
             <TextBlock x:Name="CreatorInfo" Margin="0,12,0,0" FontSize="14" Text="Created by ky-ler" />
 
-            <ui:Hyperlink Padding="0" Margin="0,12,0,0" Click="Github_Hyperlink_Click">View on GitHub</ui:Hyperlink>
+            <ui:Hyperlink Padding="0" Margin="0,12,0,0" NavigateUri="https://github.com/ky-ler/YTDownloaderUI">View on GitHub</ui:Hyperlink>
 
             <TextBlock
                 FontSize="20"
