@@ -7,7 +7,7 @@
     <UseWPF>true</UseWPF>
     <Authors>ky-ler</Authors>
     <Description>Download YouTube videos</Description>
-    <Version>2.0.0-pre</Version>
+    <Version>2.0.0</Version>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
