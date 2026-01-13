@@ -36,6 +36,7 @@
                 MinLines="4"
                 MaxLines="10"
                 TextChanged="UrlList_TextChanged"
+                PlaceholderText="https://youtube.com/watch?v=...."
             />
 
             <Grid x:Name="FFmpegWarning" Visibility="Collapsed" Margin="0,12,0,0">
