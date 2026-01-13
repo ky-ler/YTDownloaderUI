@@ -1,0 +1,65 @@
+name: Publish Releases
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Download Tools (yt-dlp)
+        shell: powershell
+        run: ./download-tools.ps1
+
+      - name: Publish Framework Dependent
+        run: |
+          dotnet publish src/YTDownloaderUI/YTDownloaderUI.csproj -c Release -f net10.0-windows -r win-x64 -o published/framework-dependent
+
+      - name: Publish Self Contained
+        run: |
+          dotnet publish src/YTDownloaderUI/YTDownloaderUI.csproj -c Release -f net10.0-windows -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o published/self-contained
+
+      - name: Create Archives
+        shell: powershell
+        run: |
+          $tag = "${{ github.ref_name }}"
+          Compress-Archive -Path published/framework-dependent/* -DestinationPath "YTDownloaderUI-${tag}-framework-dependent.zip"
+          Compress-Archive -Path published/self-contained/* -DestinationPath "YTDownloaderUI-${tag}-self-contained.zip"
+
+      - name: Generate Checksums
+        shell: powershell
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $files = @(
+            "YTDownloaderUI-${tag}-framework-dependent.zip",
+            "YTDownloaderUI-${tag}-self-contained.zip"
+          )
+          foreach ($file in $files) {
+            Get-FileHash $file -Algorithm SHA256 | Format-List | Out-String | Add-Content checksums.txt
+          }
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            YTDownloaderUI-*-framework-dependent.zip
+            YTDownloaderUI-*-self-contained.zip
+            checksums.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: false
