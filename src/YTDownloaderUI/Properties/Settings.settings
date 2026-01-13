@@ -5,12 +5,6 @@
     <Setting Name="Theme" Type="System.String" Scope="User">
       <Value Profile="(Default)">Dark</Value>
     </Setting>
-    <Setting Name="WindowWidth" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">800</Value>
-    </Setting>
-    <Setting Name="WindowHeight" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">450</Value>
-    </Setting>
     <Setting Name="DownloadDirectory" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>

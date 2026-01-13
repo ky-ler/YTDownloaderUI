@@ -15,9 +15,16 @@ public partial class MainWindow
     {
         DataContext = this;
 
-        SystemThemeWatcher.Watch(this);
-
         InitializeComponent();
+
+        if (Settings.Default.Theme == "Light")
+        {
+            ApplicationThemeManager.Apply(ApplicationTheme.Light);
+        }
+        else
+        {
+            ApplicationThemeManager.Apply(ApplicationTheme.Dark);
+        }
 
         Loaded += (_, _) => RootNavigation.Navigate(typeof(HomePage));
     }
