@@ -28,11 +28,11 @@ jobs:
 
       - name: Publish Framework Dependent
         run: |
-          dotnet publish src/YTDownloaderUI/YTDownloaderUI.csproj -c Release -f net10.0-windows -r win-x64 -o published/framework-dependent
+          dotnet publish src/YTDownloaderUI/YTDownloaderUI.csproj -c Release -f net10.0-windows -r win-x64 --no-self-contained -p:PublishSingleFile=true -p:DebugType=none -o published/framework-dependent
 
       - name: Publish Self Contained
         run: |
-          dotnet publish src/YTDownloaderUI/YTDownloaderUI.csproj -c Release -f net10.0-windows -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o published/self-contained
+          dotnet publish src/YTDownloaderUI/YTDownloaderUI.csproj -c Release -f net10.0-windows -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none -o published/self-contained
 
       - name: Create Archives
         shell: powershell
