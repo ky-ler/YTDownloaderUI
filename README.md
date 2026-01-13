@@ -1,6 +1,6 @@
 # YTDownloaderUI
 
-Lightweight UI for downloading YouTube videos with a built-in downloader.
+Lightweight Windows application for downloading YouTube videos.
 
 Paste one or more links, add them to a queue, choose a preset, and download to a local folder.
 
