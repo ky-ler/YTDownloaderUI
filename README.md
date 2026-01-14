@@ -7,8 +7,12 @@ Paste one or more links, add them to a queue, choose a preset, and download to a
 ## Features
 
 - Queue-based batch downloads (paste many links at once)
+- Playlist support
+- Subtitle downloads
+- Automatic video title fetching when adding links
 - Built-in `yt-dlp` (no separate install/config required)
 - Format/audio presets (FFmpeg optional for mp3/aac extraction)
+- Duplicate detection to prevent redundant downloads
 - Configurable download directory (defaults to `downloads` folder)
 - Cancel downloads in progress
 - Light/Dark theme
