@@ -71,16 +71,17 @@ This downloads `yt-dlp.exe` to `src/YTDownloaderUI/tools/`.
 
 Alternatively, manually download [yt-dlp.exe](https://github.com/yt-dlp/yt-dlp/releases/latest) and place it in `src/YTDownloaderUI/tools/`.
 
+
+### Optional: FFmpeg
+
+For presets (mp3, aac, mp4, mkv), download [FFmpeg](https://www.ffmpeg.org/download.html) and place `ffmpeg.exe` and `ffprobe.exe` in `src/YTDownloaderUI/tools/`.
+
 ### Build
 
 ```bash
 dotnet restore
 dotnet build -c Release
 ```
-
-### Optional: FFmpeg
-
-For audio extraction presets (mp3, aac), download [FFmpeg](https://www.ffmpeg.org/download.html) and place `ffmpeg.exe` and `ffprobe.exe` in `src/YTDownloaderUI/tools/`.
 
 ## License
 
