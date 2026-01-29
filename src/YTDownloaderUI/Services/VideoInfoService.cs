@@ -101,6 +101,7 @@ public class VideoInfoService : INotifyPropertyChanged
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 }
@@ -108,16 +109,17 @@ public class VideoInfoService : INotifyPropertyChanged
 
             process.Start();
 
-            var titleTask = process.StandardOutput.ReadLineAsync();
+            // Read all output - title may not be on first line if there are warnings
+            var outputTask = process.StandardOutput.ReadToEndAsync(cts.Token);
             var waitTask = process.WaitForExitAsync(cts.Token);
 
             try
             {
-                await Task.WhenAll(titleTask, waitTask);
+                await Task.WhenAll(outputTask, waitTask);
             }
             catch (OperationCanceledException)
             {
-                try { process.Kill(); }
+                try { process.Kill(entireProcessTree: true); }
                 catch
                 {
                     // ignored
@@ -127,7 +129,11 @@ public class VideoInfoService : INotifyPropertyChanged
                 return;
             }
 
-            var title = await titleTask;
+            var output = await outputTask;
+
+            // Get the last non-empty line (the title)
+            var lines = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+            var title = lines.Length > 0 ? lines[^1] : null;
 
             if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(title))
             {
