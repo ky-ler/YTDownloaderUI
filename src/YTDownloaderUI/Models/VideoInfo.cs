@@ -87,6 +87,36 @@ public class VideoInfo : INotifyPropertyChanged
         }
     } = 0.0;
 
+    public string? ErrorMessage
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasError));
+        }
+    }
+
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+    public int RetryCount
+    {
+        get;
+        set
+        {
+            if (field == value) return;
+            field = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanRetry));
+        }
+    }
+
+    public const int MaxRetries = 3;
+
+    public bool CanRetry => Status == "Error" && RetryCount < MaxRetries;
+
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged([CallerMemberName] string name = "")
     {
