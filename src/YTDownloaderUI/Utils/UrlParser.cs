@@ -26,27 +26,30 @@ public static class UrlParser
         }
 
         // Check for valid YouTube domain patterns
-        bool hasYoutubeDomain = cleanUrl.Contains("youtube.com/") || cleanUrl.Contains("youtu.be/");
+        var hasYoutubeDomain = cleanUrl.Contains("youtube.com/") || cleanUrl.Contains("youtu.be/");
         if (!hasYoutubeDomain)
             return new UrlValidationResult(false, "Not a valid YouTube URL", null);
 
         // Check for video or playlist identifier
-        bool hasVideoId = cleanUrl.Contains("watch?v=") ||
-                          cleanUrl.Contains("youtu.be/") ||
-                          cleanUrl.Contains("shorts/");
-        bool hasPlaylistId = cleanUrl.Contains("list=");
+        var hasVideoId = cleanUrl.Contains("watch?v=") ||
+                         cleanUrl.Contains("youtu.be/") ||
+                         cleanUrl.Contains("shorts/");
+        var hasPlaylistId = cleanUrl.Contains("list=");
 
-        if (!hasVideoId && !hasPlaylistId)
-            return new UrlValidationResult(false, "URL must contain a video or playlist ID", null);
-
-        // Validate video ID format (11 characters, alphanumeric + _ -)
-        if (hasVideoId && !hasPlaylistId)
+        switch (hasVideoId)
         {
-            var videoId = GetVideoId(cleanUrl);
-            // Remove "shorts/" prefix for validation
-            var idToCheck = videoId.StartsWith("shorts/") ? videoId[7..] : videoId;
-            if (idToCheck.Length != 11 || !IsValidVideoIdChars(idToCheck))
-                return new UrlValidationResult(false, "Invalid video ID format", null);
+            case false when !hasPlaylistId:
+                return new UrlValidationResult(false, "URL must contain a video or playlist ID", null);
+            // Validate video ID format (11 characters, alphanumeric + _ -)
+            case true when !hasPlaylistId:
+                {
+                    var videoId = GetVideoId(cleanUrl);
+                    // Remove "shorts/" prefix for validation
+                    var idToCheck = videoId.StartsWith("shorts/") ? videoId[7..] : videoId;
+                    if (idToCheck.Length != 11 || !IsValidVideoIdChars(idToCheck))
+                        return new UrlValidationResult(false, "Invalid video ID format", null);
+                    break;
+                }
         }
 
         // Validation passed - normalize
@@ -55,12 +58,7 @@ public static class UrlParser
 
     private static bool IsValidVideoIdChars(string id)
     {
-        foreach (char c in id)
-        {
-            if (!char.IsLetterOrDigit(c) && c != '_' && c != '-')
-                return false;
-        }
-        return true;
+        return id.All(c => char.IsLetterOrDigit(c) || c == '_' || c == '-');
     }
 
     /// <summary>
@@ -80,7 +78,7 @@ public static class UrlParser
         var cleanUrl = StripSpaces(url);
 
         const string playlistParam = "list=";
-        var listIndex = cleanUrl.IndexOf(playlistParam);
+        var listIndex = cleanUrl.IndexOf(playlistParam, StringComparison.Ordinal);
 
         if (listIndex < 0)
             return null;
