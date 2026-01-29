@@ -1,10 +1,7 @@
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using YTDownloaderUI.Models;
@@ -14,7 +11,9 @@ namespace YTDownloaderUI.Services;
 public class VideoInfoService : INotifyPropertyChanged
 {
     private static VideoInfoService? _instance;
-    public static VideoInfoService Instance => _instance ??= new VideoInfoService();
+    public static VideoInfoService Instance => _instance ??= new VideoInfoService(YtDlpService.Instance);
+
+    private readonly IYtDlpService _ytDlpService;
 
     public ObservableCollection<VideoInfo> Queue { get; } = [];
 
@@ -28,7 +27,10 @@ public class VideoInfoService : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    private VideoInfoService() { }
+    internal VideoInfoService(IYtDlpService ytDlpService)
+    {
+        _ytDlpService = ytDlpService;
+    }
 
     public Task AddToQueueAsync(string url, string preset, bool getPlaylist = false, bool getSubtitles = false)
     {
@@ -76,8 +78,7 @@ public class VideoInfoService : INotifyPropertyChanged
 
     private async Task FetchTitleAsync(VideoInfo video)
     {
-        var ytDlpPath = YtDlpService.Instance.YtDlpPath;
-        if (!YtDlpService.Instance.IsYtDlpAvailable || string.IsNullOrEmpty(ytDlpPath))
+        if (!_ytDlpService.IsYtDlpAvailable)
         {
             return; // Keep URL as fallback
         }
@@ -90,54 +91,11 @@ public class VideoInfoService : INotifyPropertyChanged
             var originalStatus = video.Status;
             video.Status = "Fetching info...";
 
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var title = await _ytDlpService.GetTitleAsync(video.Url);
 
-            var process = new Process
+            if (!string.IsNullOrWhiteSpace(title))
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = ytDlpPath,
-                    Arguments = $"--get-title --no-playlist \"{video.Url}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    StandardOutputEncoding = Encoding.UTF8,
-                    StandardErrorEncoding = Encoding.UTF8,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
-
-            process.Start();
-
-            // Read all output - title may not be on first line if there are warnings
-            var outputTask = process.StandardOutput.ReadToEndAsync(cts.Token);
-            var waitTask = process.WaitForExitAsync(cts.Token);
-
-            try
-            {
-                await Task.WhenAll(outputTask, waitTask);
-            }
-            catch (OperationCanceledException)
-            {
-                try { process.Kill(entireProcessTree: true); }
-                catch
-                {
-                    // ignored
-                }
-
-                video.Status = originalStatus;
-                return;
-            }
-
-            var output = await outputTask;
-
-            // Get the last non-empty line (the title)
-            var lines = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
-            var title = lines.Length > 0 ? lines[^1] : null;
-
-            if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(title))
-            {
-                video.Title = title.Trim();
+                video.Title = title;
             }
 
             video.Status = originalStatus;

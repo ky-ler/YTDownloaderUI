@@ -3,34 +3,94 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using YTDownloaderUI.Models;
 using YTDownloaderUI.Properties;
-using YTDownloaderUI.Services;
+using YTDownloaderUI.Utils;
+using static System.Text.RegularExpressions.Regex;
 
-namespace YTDownloaderUI.Utils;
+namespace YTDownloaderUI.Services;
 
-public class DownloadUtil
+public class DownloadService(IYtDlpService ytDlpService) : IDownloadService
 {
-    private static Process? _currentProcess;
-    private static readonly Lock ProcessLock = new();
+    private static DownloadService? _instance;
+    // For now, exposing a singleton for easy migration in HomePage, 
+    // though proper DI would be better.
+    public static DownloadService Instance => _instance ??= new DownloadService(YtDlpService.Instance);
+
+    private Process? _currentProcess;
+    private readonly Lock _processLock = new();
     private static readonly TimeSpan DownloadTimeout = TimeSpan.FromMinutes(30);
     private static readonly string LogFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "download.log");
     private static readonly Lock LogLock = new();
 
-    private static void WriteLog(string level, string message)
+    public async Task ProcessQueueAsync(ObservableCollection<VideoInfo> videos, CancellationToken cancellationToken)
     {
-        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        var line = $"[{timestamp}] [{level}] {message}{Environment.NewLine}";
-        lock (LogLock)
+        if (!ytDlpService.IsYtDlpAvailable)
+            return;
+
+        foreach (var video in videos)
         {
-            File.AppendAllText(LogFilePath, line);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            switch (video.Status)
+            {
+                // Skip finished, cancelled, or permanently failed
+                case "Finished" or "Cancelled":
+                // Max retries exceeded
+                case "Failed":
+                    continue;
+                // Handle retry case
+                case "Error" when video.RetryCount >= VideoInfo.MaxRetries:
+                    video.Status = "Failed";
+                    continue;
+                case "Error":
+                    video.RetryCount++;
+                    break;
+            }
+
+            try
+            {
+                await DownloadAsync(video, cancellationToken);
+            }
+            catch (DownloadException)
+            {
+                // Error already set in Download method
+                // Continue to next video instead of stopping
+            }
+            catch (OperationCanceledException)
+            {
+                // Mark remaining queued items as cancelled
+                foreach (var v in videos)
+                {
+                    if (v.Status == "Queued")
+                        v.Status = "Cancelled";
+                }
+                throw;
+            }
         }
     }
 
-    private static async Task Download(VideoInfo video, CancellationToken cancellationToken)
+    public void CancelCurrentDownload()
+    {
+        lock (_processLock)
+        {
+            try
+            {
+                if (_currentProcess is { HasExited: false })
+                {
+                    _currentProcess.Kill(entireProcessTree: true);
+                }
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+    }
+
+    private async Task DownloadAsync(VideoInfo video, CancellationToken cancellationToken)
     {
         using var timeoutCts = new CancellationTokenSource(DownloadTimeout);
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
@@ -38,7 +98,10 @@ public class DownloadUtil
 
         Process process = new();
         var cmdArgs = GetYtDlpOptions(video);
-        process.StartInfo.FileName = YtDlpService.Instance.YtDlpPath;
+
+        // Use path from service
+        process.StartInfo.FileName = ytDlpService.YtDlpPath;
+
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
@@ -58,7 +121,7 @@ public class DownloadUtil
             if (!process.Start())
                 throw new DownloadException("yt-dlp failed to start.");
 
-            lock (ProcessLock)
+            lock (_processLock)
             {
                 _currentProcess = process;
             }
@@ -131,7 +194,7 @@ public class DownloadUtil
         }
         finally
         {
-            lock (ProcessLock)
+            lock (_processLock)
             {
                 _currentProcess = null;
             }
@@ -154,111 +217,9 @@ public class DownloadUtil
         catch (OperationCanceledException) { /* expected */ }
     }
 
-    private static string ParseYtDlpError(string stderr, int exitCode)
-    {
-        // Common yt-dlp error patterns
-        if (stderr.Contains("Video unavailable"))
-            return "Video is unavailable (private, deleted, or region-locked)";
-
-        if (stderr.Contains("Sign in to confirm your age"))
-            return "Video requires age verification";
-
-        if (stderr.Contains("Private video"))
-            return "This video is private";
-
-        if (stderr.Contains("ERROR: Unable to download webpage") ||
-            stderr.Contains("URLError") ||
-            stderr.Contains("Connection refused") ||
-            stderr.Contains("timed out"))
-            return "Network error - check your internet connection";
-
-        if (stderr.Contains("ERROR: Incomplete YouTube ID"))
-            return "Invalid YouTube video ID";
-
-        if (stderr.Contains("HTTP Error 404"))
-            return "Video not found (404)";
-
-        if (stderr.Contains("HTTP Error 403"))
-            return "Access denied (403)";
-
-        if (stderr.Contains("ffmpeg") && stderr.Contains("not found"))
-            return "FFmpeg required but not found";
-
-        // Extract first ERROR line if no specific match
-        var match = Regex.Match(stderr, @"ERROR:\s*(.+)");
-        if (match.Success)
-            return match.Groups[1].Value.Trim();
-
-        return $"Download failed (exit code {exitCode})";
-    }
-
-    public static async Task ProcessQueue(ObservableCollection<VideoInfo> videos, CancellationToken cancellationToken)
-    {
-        if (!YtDlpService.Instance.IsYtDlpAvailable)
-            return;
-
-        foreach (var video in videos)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // Skip finished, cancelled, or permanently failed
-            if (video.Status is "Finished" or "Cancelled") continue;
-            if (video.Status == "Failed") continue; // Max retries exceeded
-
-            // Handle retry case
-            if (video.Status == "Error")
-            {
-                if (video.RetryCount >= VideoInfo.MaxRetries)
-                {
-                    video.Status = "Failed";
-                    continue;
-                }
-                video.RetryCount++;
-            }
-
-            try
-            {
-                await Download(video, cancellationToken);
-            }
-            catch (DownloadException)
-            {
-                // Error already set in Download method
-                // Continue to next video instead of stopping
-            }
-            catch (OperationCanceledException)
-            {
-                // Mark remaining queued items as cancelled
-                foreach (var v in videos)
-                {
-                    if (v.Status == "Queued")
-                        v.Status = "Cancelled";
-                }
-                throw;
-            }
-        }
-    }
-
-    public static void CancelCurrentDownload()
-    {
-        lock (ProcessLock)
-        {
-            try
-            {
-                if (_currentProcess is { HasExited: false })
-                {
-                    _currentProcess.Kill(entireProcessTree: true);
-                }
-            }
-            catch
-            {
-                // ignored
-            }
-        }
-    }
-
     private static async Task GetDownloadProgress(StreamReader output, VideoInfo video, CancellationToken cancellationToken)
     {
-        // yt-dlp download status lines begin with [download]
+        // yt-dlp download status lines begin with [download] 
         const string lineStart = "[download] ";
         const string findPercentage = "% of ";
 
@@ -325,8 +286,7 @@ public class DownloadUtil
         // prefers progressive streams over DASH (avoids 403 errors on fragments)
         if (video.Preset == "mp4")
         {
-            args += "--merge-output-format mp4 --remux-video mp4 " +
-                    "-S \"proto:https,vcodec:h264,lang,quality,res,fps,hdr:12,acodec:aac\" ";
+            args += "--merge-output-format mp4 --remux-video mp4 -S \"proto:https,vcodec:h264,lang,quality,res,fps,hdr:12,acodec:aac\" ";
         }
         else if (!string.IsNullOrEmpty(video.Preset))
         {
@@ -336,5 +296,51 @@ public class DownloadUtil
         args += video.Url;
 
         return args;
+    }
+
+    private static void WriteLog(string level, string message)
+    {
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        var line = $"[{timestamp}] [{level}] {message}{Environment.NewLine}";
+        lock (LogLock)
+        {
+            File.AppendAllText(LogFilePath, line);
+        }
+    }
+
+    // Moved from DownloadUtil and kept internal for testing
+    internal static string ParseYtDlpError(string stderr, int exitCode)
+    {
+        // Common yt-dlp error patterns
+        if (stderr.Contains("Video unavailable"))
+            return "Video is unavailable (private, deleted, or region-locked)";
+
+        if (stderr.Contains("Sign in to confirm your age"))
+            return "Video requires age verification";
+
+        if (stderr.Contains("Private video"))
+            return "This video is private";
+
+        if (stderr.Contains("ERROR: Unable to download webpage") ||
+            stderr.Contains("URLError") ||
+            stderr.Contains("Connection refused") ||
+            stderr.Contains("timed out"))
+            return "Network error - check your internet connection";
+
+        if (stderr.Contains("ERROR: Incomplete YouTube ID"))
+            return "Invalid YouTube video ID";
+
+        if (stderr.Contains("HTTP Error 404"))
+            return "Video not found (404)";
+
+        if (stderr.Contains("HTTP Error 403"))
+            return "Access denied (403)";
+
+        if (stderr.Contains("ffmpeg") && stderr.Contains("not found"))
+            return "FFmpeg required but not found";
+
+        // Extract first ERROR line if no specific match
+        var match = Match(stderr, @"ERROR:\s*(.+)");
+        return match.Success ? match.Groups[1].Value.Trim() : $"Download failed (exit code {exitCode})";
     }
 }

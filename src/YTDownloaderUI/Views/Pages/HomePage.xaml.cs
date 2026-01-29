@@ -22,6 +22,7 @@ public partial class HomePage
     private readonly VideoInfoService _videoInfoService;
     private readonly FFmpegService _ffmpegService;
     private readonly YtDlpService _ytDlpService;
+    private readonly IDownloadService _downloadService;
     private CancellationTokenSource? _downloadCts;
 
     private static string GetDownloadDirectory()
@@ -42,6 +43,7 @@ public partial class HomePage
         _videoInfoService = VideoInfoService.Instance;
         _ffmpegService = FFmpegService.Instance;
         _ytDlpService = YtDlpService.Instance;
+        _downloadService = DownloadService.Instance;
 
         // Bind queue from service
         QueueList.ItemsSource = _videoInfoService.Queue;
@@ -272,7 +274,7 @@ public partial class HomePage
 
         try
         {
-            await DownloadUtil.ProcessQueue(_videoInfoService.Queue, _downloadCts.Token);
+            await _downloadService.ProcessQueueAsync(_videoInfoService.Queue, _downloadCts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -310,7 +312,7 @@ public partial class HomePage
     private void CancelDownload_Button_Click(object sender, RoutedEventArgs e)
     {
         _downloadCts?.Cancel();
-        DownloadUtil.CancelCurrentDownload();
+        _downloadService.CancelCurrentDownload();
     }
 
     private void RefreshFFmpeg_Click(object sender, RoutedEventArgs e)
