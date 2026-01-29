@@ -1,10 +1,68 @@
-﻿using System;
+using System;
 using System.Linq;
 
 namespace YTDownloaderUI.Utils;
 
+public record UrlValidationResult(bool IsValid, string? ErrorMessage, string? NormalizedUrl);
+
 public static class UrlParser
 {
+    /// <summary>
+    /// Validates a YouTube URL and returns a normalized version if valid
+    /// </summary>
+    public static UrlValidationResult ValidateAndNormalize(string url)
+    {
+        var cleanUrl = StripSpaces(url);
+
+        // Check for empty/whitespace
+        if (string.IsNullOrWhiteSpace(cleanUrl))
+            return new UrlValidationResult(false, "URL cannot be empty", null);
+
+        // Add https:// prefix if missing (allows "youtube.com/..." or "youtu.be/...")
+        if (!cleanUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+            !cleanUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            cleanUrl = "https://" + cleanUrl;
+        }
+
+        // Check for valid YouTube domain patterns
+        bool hasYoutubeDomain = cleanUrl.Contains("youtube.com/") || cleanUrl.Contains("youtu.be/");
+        if (!hasYoutubeDomain)
+            return new UrlValidationResult(false, "Not a valid YouTube URL", null);
+
+        // Check for video or playlist identifier
+        bool hasVideoId = cleanUrl.Contains("watch?v=") ||
+                          cleanUrl.Contains("youtu.be/") ||
+                          cleanUrl.Contains("shorts/");
+        bool hasPlaylistId = cleanUrl.Contains("list=");
+
+        if (!hasVideoId && !hasPlaylistId)
+            return new UrlValidationResult(false, "URL must contain a video or playlist ID", null);
+
+        // Validate video ID format (11 characters, alphanumeric + _ -)
+        if (hasVideoId && !hasPlaylistId)
+        {
+            var videoId = GetVideoId(cleanUrl);
+            // Remove "shorts/" prefix for validation
+            var idToCheck = videoId.StartsWith("shorts/") ? videoId[7..] : videoId;
+            if (idToCheck.Length != 11 || !IsValidVideoIdChars(idToCheck))
+                return new UrlValidationResult(false, "Invalid video ID format", null);
+        }
+
+        // Validation passed - normalize
+        return new UrlValidationResult(true, null, NormalizeUrl(cleanUrl));
+    }
+
+    private static bool IsValidVideoIdChars(string id)
+    {
+        foreach (char c in id)
+        {
+            if (!char.IsLetterOrDigit(c) && c != '_' && c != '-')
+                return false;
+        }
+        return true;
+    }
+
     /// <summary>
     /// Checks if the URL is a YouTube playlist URL
     /// </summary>
