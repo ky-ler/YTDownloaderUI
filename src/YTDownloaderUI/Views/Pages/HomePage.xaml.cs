@@ -130,8 +130,7 @@ public partial class HomePage
 
     private async void AddToQueue_Button_Click(object sender, RoutedEventArgs e)
     {
-        var urls = UrlList.Text.Split(["\n", "\r\n", ",", " "], StringSplitOptions.RemoveEmptyEntries)
-                                .Where(x => x.Contains("youtu.be/") || x.Contains("youtube.com/"))
+        var rawUrls = UrlList.Text.Split(["\n", "\r\n", ",", " "], StringSplitOptions.RemoveEmptyEntries)
                                 .Select(x => x.Trim())
                                 .ToList();
 
@@ -139,19 +138,28 @@ public partial class HomePage
         var getSubtitles = SubtitlesCheckBox.IsChecked == true;
 
         int duplicatesSkipped = 0;
+        var validationErrors = new System.Collections.Generic.List<string>();
 
-        foreach (var url in urls)
+        foreach (var rawUrl in rawUrls)
         {
-            var isPlaylistUrl = UrlParser.IsPlaylistUrl(url);
-            var normalizedUrl = UrlParser.NormalizeUrl(url);
+            // Validate URL
+            var validation = UrlParser.ValidateAndNormalize(rawUrl);
+            if (!validation.IsValid)
+            {
+                validationErrors.Add(validation.ErrorMessage ?? "Invalid URL");
+                continue;
+            }
+
+            var normalizedUrl = validation.NormalizedUrl!;
+            var isPlaylistUrl = UrlParser.IsPlaylistUrl(rawUrl);
 
             // Auto-enable playlist download for playlist URLs, otherwise use checkbox
             var getPlaylist = isPlaylistUrl || PlaylistCheckBox.IsChecked == true;
 
             // Get the unique identifier for duplicate checking
-            var uniqueId = isPlaylistUrl && !url.Contains("watch?v=")
-                ? UrlParser.GetPlaylistId(url) ?? normalizedUrl
-                : UrlParser.GetVideoId(url);
+            var uniqueId = isPlaylistUrl && !rawUrl.Contains("watch?v=")
+                ? UrlParser.GetPlaylistId(rawUrl) ?? normalizedUrl
+                : UrlParser.GetVideoId(rawUrl);
 
             // Check for duplicates (same video/playlist with same options)
             var existingDuplicate = _videoInfoService.FindDuplicate(uniqueId, selectedPreset, getPlaylist, getSubtitles);
@@ -161,9 +169,9 @@ public partial class HomePage
                 // No duplicate, add to queue
                 await _videoInfoService.AddToQueueAsync(normalizedUrl, selectedPreset, getPlaylist, getSubtitles);
             }
-            else if (existingDuplicate.Status == "Cancelled" || existingDuplicate.Status == "Finished")
+            else if (existingDuplicate.Status is "Cancelled" or "Finished" or "Failed")
             {
-                // Duplicate exists but is cancelled or finished, replace it
+                // Duplicate exists but is cancelled, finished, or failed - replace it
                 _videoInfoService.ReplaceInQueue(existingDuplicate, normalizedUrl, selectedPreset, getPlaylist, getSubtitles);
             }
             else
@@ -171,6 +179,20 @@ public partial class HomePage
                 // Duplicate is still queued or downloading, skip
                 duplicatesSkipped++;
             }
+        }
+
+        // Show validation error if any URLs were invalid
+        if (validationErrors.Count > 0)
+        {
+            var distinctErrors = validationErrors.Distinct().ToList();
+            ValidationError.Message = validationErrors.Count == 1
+                ? $"1 URL was invalid: {distinctErrors[0]}"
+                : $"{validationErrors.Count} URLs were invalid: {string.Join(", ", distinctErrors)}";
+            ValidationErrorContainer.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            ValidationErrorContainer.Visibility = Visibility.Collapsed;
         }
 
         // Show duplicate warning if any were skipped
@@ -198,6 +220,7 @@ public partial class HomePage
     private void ClearQueue_Button_Click(object sender, RoutedEventArgs e)
     {
         _videoInfoService.Queue.Clear();
+        ErrorSummaryContainer.Visibility = Visibility.Collapsed;
     }
 
     private async void StartDownload_Button_Click(object sender, RoutedEventArgs e)
@@ -263,6 +286,24 @@ public partial class HomePage
             // Restore UI state
             CancelDownloadButton.Visibility = Visibility.Collapsed;
             UpdateQueueButtonStates();
+
+            // Show error summary if any downloads failed
+            var errorCount = _videoInfoService.Queue.Count(v => v.Status == "Error");
+            var failedCount = _videoInfoService.Queue.Count(v => v.Status == "Failed");
+
+            if (errorCount > 0 || failedCount > 0)
+            {
+                var messages = new System.Collections.Generic.List<string>();
+                if (errorCount > 0) messages.Add($"{errorCount} can be retried");
+                if (failedCount > 0) messages.Add($"{failedCount} permanently failed");
+
+                ErrorSummary.Message = string.Join(", ", messages) + ". Click Download to retry eligible items.";
+                ErrorSummaryContainer.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ErrorSummaryContainer.Visibility = Visibility.Collapsed;
+            }
         }
     }
 
@@ -281,5 +322,29 @@ public partial class HomePage
     private void DuplicateWarning_Dismiss_Click(object sender, RoutedEventArgs e)
     {
         DuplicateWarningContainer.Visibility = Visibility.Collapsed;
+    }
+
+    private void ValidationError_Dismiss_Click(object sender, RoutedEventArgs e)
+    {
+        ValidationErrorContainer.Visibility = Visibility.Collapsed;
+    }
+
+    private void ErrorSummary_Dismiss_Click(object sender, RoutedEventArgs e)
+    {
+        ErrorSummaryContainer.Visibility = Visibility.Collapsed;
+    }
+
+    private void DeleteQueueItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element && element.Tag is Models.VideoInfo video)
+        {
+            _videoInfoService.Queue.Remove(video);
+
+            // Hide error summary if no errored items remain
+            if (!_videoInfoService.Queue.Any(v => v.Status is "Error" or "Failed"))
+            {
+                ErrorSummaryContainer.Visibility = Visibility.Collapsed;
+            }
+        }
     }
 }

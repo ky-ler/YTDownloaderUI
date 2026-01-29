@@ -6,6 +6,7 @@
     xmlns:local="clr-namespace:YTDownloaderUI.Views.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:utils="clr-namespace:YTDownloaderUI.Utils"
     Title="HomePage"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -18,6 +19,7 @@
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <utils:StatusToColorConverter x:Key="StatusToColorConverter" />
     </Page.Resources>
 
     <ui:DynamicScrollViewer>
@@ -120,12 +122,60 @@
                 />
             </Grid>
 
+            <!-- Validation Error -->
+            <Grid x:Name="ValidationErrorContainer" Visibility="Collapsed" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:InfoBar
+                    x:Name="ValidationError"
+                    Grid.Column="0"
+                    Title="Invalid URLs"
+                    Message="Some URLs were invalid and not added to the queue."
+                    Severity="Error"
+                    IsOpen="True"
+                    IsClosable="False"
+                />
+                <ui:Button
+                    Grid.Column="1"
+                    Content="✕"
+                    VerticalAlignment="Center"
+                    Margin="8,0,0,0"
+                    Click="ValidationError_Dismiss_Click"
+                />
+            </Grid>
+
             <TextBlock
                 Margin="0,24,0,0"
                 FontSize="20"
                 FontWeight="Medium"
                 Text="Queue" 
             />
+
+            <!-- Error Summary -->
+            <Grid x:Name="ErrorSummaryContainer" Visibility="Collapsed" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:InfoBar
+                    x:Name="ErrorSummary"
+                    Grid.Column="0"
+                    Title="Download Errors"
+                    Message="Some downloads failed. Click Download to retry."
+                    Severity="Error"
+                    IsOpen="True"
+                    IsClosable="False"
+                />
+                <ui:Button
+                    Grid.Column="1"
+                    Content="✕"
+                    VerticalAlignment="Center"
+                    Margin="8,0,0,0"
+                    Click="ErrorSummary_Dismiss_Click"
+                />
+            </Grid>
 
             <ItemsControl x:Name="QueueList" Margin="0,12,0,0">
                 <ItemsControl.ItemTemplate>
@@ -137,6 +187,7 @@
                                 <ColumnDefinition Width="80" />
                                 <ColumnDefinition Width="120" />
                                 <ColumnDefinition Width="70" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
                             <!-- Video Title or URL -->
@@ -145,6 +196,7 @@
                                 Grid.Column="0"
                                 TextTrimming="CharacterEllipsis"
                                 ToolTip="{Binding Url}"
+                                VerticalAlignment="Center"
                             />
 
                             <!-- Options indicators -->
@@ -152,6 +204,7 @@
                                 Grid.Column="1"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
                                 ToolTip="{Binding OptionsTooltip}">
                                 <TextBlock
                                     Text="P"
@@ -171,15 +224,30 @@
                                 Text="{Binding PresetDisplay}"
                                 Grid.Column="2"
                                 HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             />
 
-                            <!-- Status -->
-                            <TextBlock
-                                Text="{Binding Status}"
+                            <!-- Status with color and error indicator -->
+                            <StackPanel
                                 Grid.Column="3"
+                                Orientation="Horizontal"
                                 HorizontalAlignment="Right"
-                            />
+                                VerticalAlignment="Center"
+                                >
+                                <TextBlock
+                                    Text="{Binding Status}"
+                                    Foreground="{Binding Status, Converter={StaticResource StatusToColorConverter}}"
+                                />
+                                <ui:SymbolIcon
+                                    Symbol="ErrorCircle12"
+                                    Foreground="Red"
+                                    Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    ToolTip="{Binding ErrorMessage}"
+                                    Margin="4,0,0,0"
+                                    VerticalAlignment="Center"
+                                />
+                            </StackPanel>
 
                             <!-- Progress -->
                             <TextBlock
@@ -187,6 +255,18 @@
                                 Text="{Binding DownloadProgress, StringFormat=p1}"
                                 Grid.Column="4"
                                 HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                            />
+
+                            <!-- Delete Button -->
+                            <ui:Button
+                                Grid.Column="5"
+                                Content="✕"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                ToolTip="Remove from queue"
+                                Click="DeleteQueueItem_Click"
+                                Tag="{Binding}"
                             />
 
                         </Grid>
